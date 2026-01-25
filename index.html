@@ -7,18 +7,59 @@
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <style>
     body { margin: 0; overflow: hidden; }
+    #book-info {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 15px 25px;
+      border-radius: 8px;
+      font-family: Georgia, serif;
+      font-size: 16px;
+      max-width: 500px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    #book-info.visible { opacity: 1; }
+    #book-info .title { font-weight: bold; margin-bottom: 5px; }
+    #book-info .author { color: #aaa; font-style: italic; }
+    #book-info .sample { color: #f90; font-size: 12px; margin-top: 5px; }
+    #stats {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: #666;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
+  <div id="book-info">
+    <div class="title"></div>
+    <div class="author"></div>
+    <div class="sample"></div>
+  </div>
+  <div id="stats">Loading library...</div>
+
   <a-scene background="color: #1a1a2e">
 
     <!-- Camera with WASD movement and mouse look -->
     <a-entity id="rig" position="0 0 4">
       <a-entity
+        id="camera"
         camera
         look-controls="pointerLockEnabled: true"
         wasd-controls="acceleration: 30"
-        position="0 1.6 0">
+        position="0 1.6 0"
+        raycaster="objects: .book; far: 5"
+        cursor="rayOrigin: mouse">
       </a-entity>
     </a-entity>
 
@@ -29,273 +70,204 @@
     <a-light type="point" position="4 3 -4" intensity="0.5" color="#ccddff" decay="2" distance="10"></a-light>
 
     <!-- Room: Floor -->
-    <a-plane
-      position="0 0 0"
-      rotation="-90 0 0"
-      width="12"
-      height="12"
-      color="#2d2d44"
-      material="roughness: 0.8">
-    </a-plane>
+    <a-plane position="0 0 0" rotation="-90 0 0" width="12" height="12" color="#2d2d44" material="roughness: 0.8"></a-plane>
 
     <!-- Room: Ceiling -->
-    <a-plane
-      position="0 5 0"
-      rotation="90 0 0"
-      width="12"
-      height="12"
-      color="#1a1a2e">
-    </a-plane>
+    <a-plane position="0 5 0" rotation="90 0 0" width="12" height="12" color="#1a1a2e"></a-plane>
 
-    <!-- Room: Back Wall -->
-    <a-plane
-      position="0 2.5 -6"
-      width="12"
-      height="5"
-      color="#252538">
-    </a-plane>
+    <!-- Room: Walls -->
+    <a-plane position="0 2.5 -6" width="12" height="5" color="#252538"></a-plane>
+    <a-plane position="-6 2.5 0" rotation="0 90 0" width="12" height="5" color="#252538"></a-plane>
+    <a-plane position="6 2.5 0" rotation="0 -90 0" width="12" height="5" color="#252538"></a-plane>
+    <a-plane position="0 2.5 6" rotation="0 180 0" width="12" height="5" color="#252538"></a-plane>
 
-    <!-- Room: Left Wall -->
-    <a-plane
-      position="-6 2.5 0"
-      rotation="0 90 0"
-      width="12"
-      height="5"
-      color="#252538">
-    </a-plane>
+    <!-- Bookshelves (frames only - books added dynamically) -->
 
-    <!-- Room: Right Wall -->
-    <a-plane
-      position="6 2.5 0"
-      rotation="0 -90 0"
-      width="12"
-      height="5"
-      color="#252538">
-    </a-plane>
-
-    <!-- Room: Front Wall (with gap for entrance feel) -->
-    <a-plane
-      position="0 2.5 6"
-      rotation="0 180 0"
-      width="12"
-      height="5"
-      color="#252538">
-    </a-plane>
-
-    <!-- ==================== BOOKSHELVES ==================== -->
-
-    <!-- Back Wall Bookshelf (large, centered) -->
+    <!-- Back Wall Bookshelf -->
     <a-entity id="bookshelf-back" position="0 0 -5.5">
-      <!-- Shelf frame -->
       <a-box position="0 2 0" width="6" height="4" depth="0.4" color="#4a3728"></a-box>
-
-      <!-- Shelf dividers (horizontal) -->
       <a-box position="0 0.5 0.1" width="5.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
       <a-box position="0 1.3 0.1" width="5.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
       <a-box position="0 2.1 0.1" width="5.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
       <a-box position="0 2.9 0.1" width="5.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
       <a-box position="0 3.7 0.1" width="5.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-
-      <!-- Bottom shelf books -->
-      <a-box position="-2.5 0.8 0.15" width="0.12" height="0.6" depth="0.22" color="#c41e3a"></a-box>
-      <a-box position="-2.35 0.85 0.15" width="0.1" height="0.7" depth="0.22" color="#1e5c3a"></a-box>
-      <a-box position="-2.2 0.8 0.15" width="0.14" height="0.6" depth="0.22" color="#2c3e8c"></a-box>
-      <a-box position="-2.0 0.82 0.15" width="0.11" height="0.64" depth="0.22" color="#8c6b2c"></a-box>
-      <a-box position="-1.85 0.78 0.15" width="0.13" height="0.56" depth="0.22" color="#6b2c8c"></a-box>
-      <a-box position="-1.68 0.83 0.15" width="0.12" height="0.66" depth="0.22" color="#2c8c8c"></a-box>
-      <a-box position="-1.52 0.8 0.15" width="0.15" height="0.6" depth="0.22" color="#8c2c2c"></a-box>
-
-      <a-box position="-0.5 0.8 0.15" width="0.12" height="0.6" depth="0.22" color="#3a5c1e"></a-box>
-      <a-box position="-0.35 0.75 0.15" width="0.1" height="0.5" depth="0.22" color="#5c3a1e"></a-box>
-      <a-box position="-0.2 0.82 0.15" width="0.14" height="0.64" depth="0.22" color="#1e3a5c"></a-box>
-      <a-box position="0 0.8 0.15" width="0.11" height="0.6" depth="0.22" color="#5c1e5c"></a-box>
-      <a-box position="0.15 0.85 0.15" width="0.13" height="0.7" depth="0.22" color="#cc9933"></a-box>
-
-      <a-box position="1.5 0.8 0.15" width="0.12" height="0.6" depth="0.22" color="#336699"></a-box>
-      <a-box position="1.65 0.82 0.15" width="0.1" height="0.64" depth="0.22" color="#993366"></a-box>
-      <a-box position="1.8 0.78 0.15" width="0.14" height="0.56" depth="0.22" color="#669933"></a-box>
-      <a-box position="2.0 0.8 0.15" width="0.11" height="0.6" depth="0.22" color="#996633"></a-box>
-      <a-box position="2.15 0.83 0.15" width="0.13" height="0.66" depth="0.22" color="#339966"></a-box>
-      <a-box position="2.32 0.8 0.15" width="0.15" height="0.6" depth="0.22" color="#663399"></a-box>
-
-      <!-- Second shelf books -->
-      <a-box position="-2.4 1.6 0.15" width="0.12" height="0.6" depth="0.22" color="#e67e22"></a-box>
-      <a-box position="-2.25 1.65 0.15" width="0.1" height="0.7" depth="0.22" color="#27ae60"></a-box>
-      <a-box position="-2.1 1.58 0.15" width="0.14" height="0.56" depth="0.22" color="#8e44ad"></a-box>
-      <a-box position="-1.9 1.62 0.15" width="0.11" height="0.64" depth="0.22" color="#2980b9"></a-box>
-      <a-box position="-1.75 1.6 0.15" width="0.13" height="0.6" depth="0.22" color="#c0392b"></a-box>
-      <a-box position="-1.58 1.63 0.15" width="0.12" height="0.66" depth="0.22" color="#16a085"></a-box>
-
-      <a-box position="0.5 1.6 0.15" width="0.12" height="0.6" depth="0.22" color="#d35400"></a-box>
-      <a-box position="0.65 1.55 0.15" width="0.1" height="0.5" depth="0.22" color="#1abc9c"></a-box>
-      <a-box position="0.8 1.62 0.15" width="0.14" height="0.64" depth="0.22" color="#9b59b6"></a-box>
-      <a-box position="1.0 1.6 0.15" width="0.11" height="0.6" depth="0.22" color="#3498db"></a-box>
-      <a-box position="1.15 1.65 0.15" width="0.13" height="0.7" depth="0.22" color="#e74c3c"></a-box>
-      <a-box position="1.32 1.6 0.15" width="0.15" height="0.6" depth="0.22" color="#2ecc71"></a-box>
-      <a-box position="1.5 1.58 0.15" width="0.12" height="0.56" depth="0.22" color="#f39c12"></a-box>
-
-      <!-- Third shelf books -->
-      <a-box position="-1.8 2.4 0.15" width="0.12" height="0.6" depth="0.22" color="#5d6d7e"></a-box>
-      <a-box position="-1.65 2.45 0.15" width="0.1" height="0.7" depth="0.22" color="#a93226"></a-box>
-      <a-box position="-1.5 2.38 0.15" width="0.14" height="0.56" depth="0.22" color="#1a5276"></a-box>
-      <a-box position="-1.3 2.42 0.15" width="0.11" height="0.64" depth="0.22" color="#196f3d"></a-box>
-      <a-box position="-1.15 2.4 0.15" width="0.13" height="0.6" depth="0.22" color="#7d3c98"></a-box>
-
-      <a-box position="1.0 2.4 0.15" width="0.12" height="0.6" depth="0.22" color="#b7950b"></a-box>
-      <a-box position="1.15 2.35 0.15" width="0.1" height="0.5" depth="0.22" color="#117864"></a-box>
-      <a-box position="1.3 2.42 0.15" width="0.14" height="0.64" depth="0.22" color="#6c3483"></a-box>
-      <a-box position="1.5 2.4 0.15" width="0.11" height="0.6" depth="0.22" color="#21618c"></a-box>
-      <a-box position="1.65 2.45 0.15" width="0.13" height="0.7" depth="0.22" color="#a04000"></a-box>
-
-      <!-- Top shelf books (fewer, like prized collection) -->
-      <a-box position="-0.5 3.2 0.15" width="0.15" height="0.6" depth="0.22" color="#d4ac0d"></a-box>
-      <a-box position="-0.3 3.25 0.15" width="0.12" height="0.7" depth="0.22" color="#7b241c"></a-box>
-      <a-box position="-0.12 3.2 0.15" width="0.14" height="0.6" depth="0.22" color="#1b4f72"></a-box>
-      <a-box position="0.08 3.22 0.15" width="0.11" height="0.64" depth="0.22" color="#145a32"></a-box>
-      <a-box position="0.25 3.2 0.15" width="0.13" height="0.6" depth="0.22" color="#512e5f"></a-box>
-      <a-box position="0.42 3.18 0.15" width="0.12" height="0.56" depth="0.22" color="#784212"></a-box>
     </a-entity>
 
     <!-- Left Wall Bookshelf -->
     <a-entity id="bookshelf-left" position="-5.5 0 -2" rotation="0 90 0">
-      <!-- Shelf frame -->
       <a-box position="0 1.5 0" width="4" height="3" depth="0.4" color="#4a3728"></a-box>
-
-      <!-- Shelf dividers -->
       <a-box position="0 0.4 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
       <a-box position="0 1.1 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
       <a-box position="0 1.8 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
       <a-box position="0 2.5 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-
-      <!-- Books -->
-      <a-box position="-1.5 0.7 0.15" width="0.12" height="0.55" depth="0.22" color="#c0392b"></a-box>
-      <a-box position="-1.35 0.72 0.15" width="0.1" height="0.6" depth="0.22" color="#27ae60"></a-box>
-      <a-box position="-1.2 0.68 0.15" width="0.14" height="0.52" depth="0.22" color="#2980b9"></a-box>
-      <a-box position="-1.0 0.7 0.15" width="0.11" height="0.55" depth="0.22" color="#8e44ad"></a-box>
-      <a-box position="-0.85 0.73 0.15" width="0.13" height="0.62" depth="0.22" color="#d35400"></a-box>
-
-      <a-box position="0.5 0.7 0.15" width="0.12" height="0.55" depth="0.22" color="#16a085"></a-box>
-      <a-box position="0.65 0.68 0.15" width="0.1" height="0.52" depth="0.22" color="#c0392b"></a-box>
-      <a-box position="0.8 0.72 0.15" width="0.14" height="0.6" depth="0.22" color="#2c3e50"></a-box>
-      <a-box position="1.0 0.7 0.15" width="0.11" height="0.55" depth="0.22" color="#f39c12"></a-box>
-      <a-box position="1.15 0.7 0.15" width="0.13" height="0.55" depth="0.22" color="#1abc9c"></a-box>
-
-      <a-box position="-1.2 1.4 0.15" width="0.12" height="0.55" depth="0.22" color="#9b59b6"></a-box>
-      <a-box position="-1.05 1.42 0.15" width="0.1" height="0.6" depth="0.22" color="#e74c3c"></a-box>
-      <a-box position="-0.9 1.38 0.15" width="0.14" height="0.52" depth="0.22" color="#3498db"></a-box>
-      <a-box position="-0.7 1.4 0.15" width="0.11" height="0.55" depth="0.22" color="#2ecc71"></a-box>
-
-      <a-box position="0.8 1.4 0.15" width="0.12" height="0.55" depth="0.22" color="#e67e22"></a-box>
-      <a-box position="0.95 1.38 0.15" width="0.1" height="0.52" depth="0.22" color="#1abc9c"></a-box>
-      <a-box position="1.1 1.42 0.15" width="0.14" height="0.6" depth="0.22" color="#9b59b6"></a-box>
-
-      <a-box position="-0.3 2.1 0.15" width="0.12" height="0.55" depth="0.22" color="#34495e"></a-box>
-      <a-box position="-0.15 2.13 0.15" width="0.1" height="0.6" depth="0.22" color="#e74c3c"></a-box>
-      <a-box position="0 2.08 0.15" width="0.14" height="0.52" depth="0.22" color="#27ae60"></a-box>
-      <a-box position="0.2 2.1 0.15" width="0.11" height="0.55" depth="0.22" color="#3498db"></a-box>
     </a-entity>
 
     <!-- Right Wall Bookshelf -->
     <a-entity id="bookshelf-right" position="5.5 0 -2" rotation="0 -90 0">
-      <!-- Shelf frame -->
       <a-box position="0 1.5 0" width="4" height="3" depth="0.4" color="#4a3728"></a-box>
-
-      <!-- Shelf dividers -->
       <a-box position="0 0.4 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
       <a-box position="0 1.1 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
       <a-box position="0 1.8 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
       <a-box position="0 2.5 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-
-      <!-- Books -->
-      <a-box position="-1.4 0.7 0.15" width="0.12" height="0.55" depth="0.22" color="#2ecc71"></a-box>
-      <a-box position="-1.25 0.72 0.15" width="0.1" height="0.6" depth="0.22" color="#e74c3c"></a-box>
-      <a-box position="-1.1 0.68 0.15" width="0.14" height="0.52" depth="0.22" color="#3498db"></a-box>
-      <a-box position="-0.9 0.7 0.15" width="0.11" height="0.55" depth="0.22" color="#f1c40f"></a-box>
-      <a-box position="-0.75 0.73 0.15" width="0.13" height="0.62" depth="0.22" color="#9b59b6"></a-box>
-
-      <a-box position="0.6 0.7 0.15" width="0.12" height="0.55" depth="0.22" color="#e67e22"></a-box>
-      <a-box position="0.75 0.68 0.15" width="0.1" height="0.52" depth="0.22" color="#1abc9c"></a-box>
-      <a-box position="0.9 0.72 0.15" width="0.14" height="0.6" depth="0.22" color="#c0392b"></a-box>
-      <a-box position="1.1 0.7 0.15" width="0.11" height="0.55" depth="0.22" color="#2980b9"></a-box>
-      <a-box position="1.25 0.7 0.15" width="0.13" height="0.55" depth="0.22" color="#27ae60"></a-box>
-
-      <a-box position="-0.8 1.4 0.15" width="0.12" height="0.55" depth="0.22" color="#8e44ad"></a-box>
-      <a-box position="-0.65 1.42 0.15" width="0.1" height="0.6" depth="0.22" color="#d35400"></a-box>
-      <a-box position="-0.5 1.38 0.15" width="0.14" height="0.52" depth="0.22" color="#16a085"></a-box>
-      <a-box position="-0.3 1.4 0.15" width="0.11" height="0.55" depth="0.22" color="#c0392b"></a-box>
-
-      <a-box position="0.9 1.4 0.15" width="0.12" height="0.55" depth="0.22" color="#2c3e50"></a-box>
-      <a-box position="1.05 1.38 0.15" width="0.1" height="0.52" depth="0.22" color="#f39c12"></a-box>
-      <a-box position="1.2 1.42 0.15" width="0.14" height="0.6" depth="0.22" color="#1abc9c"></a-box>
-
-      <a-box position="0 2.1 0.15" width="0.12" height="0.55" depth="0.22" color="#e74c3c"></a-box>
-      <a-box position="0.15 2.13 0.15" width="0.1" height="0.6" depth="0.22" color="#3498db"></a-box>
-      <a-box position="0.3 2.08 0.15" width="0.14" height="0.52" depth="0.22" color="#2ecc71"></a-box>
-      <a-box position="0.5 2.1 0.15" width="0.11" height="0.55" depth="0.22" color="#9b59b6"></a-box>
     </a-entity>
 
-    <!-- ==================== FURNITURE ==================== -->
-
-    <!-- Reading chair -->
+    <!-- Furniture -->
     <a-entity id="chair" position="3 0 2">
-      <!-- Seat -->
       <a-box position="0 0.45 0" width="0.8" height="0.1" depth="0.8" color="#8b4513"></a-box>
-      <!-- Back -->
       <a-box position="0 0.9 -0.35" width="0.8" height="0.8" depth="0.1" color="#8b4513"></a-box>
-      <!-- Legs -->
       <a-box position="-0.3 0.2 0.3" width="0.08" height="0.4" depth="0.08" color="#5d3a1a"></a-box>
       <a-box position="0.3 0.2 0.3" width="0.08" height="0.4" depth="0.08" color="#5d3a1a"></a-box>
       <a-box position="-0.3 0.2 -0.3" width="0.08" height="0.4" depth="0.08" color="#5d3a1a"></a-box>
       <a-box position="0.3 0.2 -0.3" width="0.08" height="0.4" depth="0.08" color="#5d3a1a"></a-box>
     </a-entity>
 
-    <!-- Small side table -->
     <a-entity id="side-table" position="4 0 2">
       <a-cylinder position="0 0.5 0" radius="0.3" height="0.05" color="#5d3a1a"></a-cylinder>
       <a-cylinder position="0 0.25 0" radius="0.05" height="0.5" color="#5d3a1a"></a-cylinder>
       <a-cylinder position="0 0 0" radius="0.25" height="0.05" color="#5d3a1a"></a-cylinder>
-      <!-- Book on table -->
-      <a-box position="0 0.55 0" width="0.25" height="0.04" depth="0.18" color="#c0392b"></a-box>
     </a-entity>
 
-    <!-- Rug -->
-    <a-plane
-      position="0 0.01 0"
-      rotation="-90 0 0"
-      width="5"
-      height="4"
-      color="#4a3650"
-      material="roughness: 1">
-    </a-plane>
+    <a-plane position="0 0.01 0" rotation="-90 0 0" width="5" height="4" color="#4a3650" material="roughness: 1"></a-plane>
 
-    <!-- ==================== DECORATIONS ==================== -->
-
-    <!-- Globe on a pedestal -->
     <a-entity id="globe" position="-4 0 3">
       <a-box position="0 0.5 0" width="0.3" height="1" depth="0.3" color="#5d3a1a"></a-box>
       <a-sphere position="0 1.3 0" radius="0.4" color="#2980b9" material="metalness: 0.3; roughness: 0.7"></a-sphere>
     </a-entity>
 
-    <!-- Window (fake, just a light rectangle) -->
-    <a-plane
-      position="-5.95 2.5 2"
-      rotation="0 90 0"
-      width="2"
-      height="2.5"
-      color="#87ceeb"
-      material="emissive: #87ceeb; emissiveIntensity: 0.3">
-    </a-plane>
+    <a-plane position="-5.95 2.5 2" rotation="0 90 0" width="2" height="2.5" color="#87ceeb" material="emissive: #87ceeb; emissiveIntensity: 0.3"></a-plane>
 
-    <!-- Instructions text (floating, fades after a moment in real app) -->
-    <a-text
-      value="Click to enable mouse look\nWASD to move"
-      position="0 2.5 3"
-      rotation="0 180 0"
-      align="center"
-      color="#aaaaaa"
-      width="4">
-    </a-text>
+    <a-text value="Click to enable mouse look\nWASD to move\nLook at books to see details" position="0 2.5 3" rotation="0 180 0" align="center" color="#aaaaaa" width="4"></a-text>
+
+    <!-- Container for dynamically added books -->
+    <a-entity id="books-container"></a-entity>
 
   </a-scene>
+
+  <script>
+    // Book colors - rich, varied palette
+    const BOOK_COLORS = [
+      '#c41e3a', '#1e5c3a', '#2c3e8c', '#8c6b2c', '#6b2c8c', '#2c8c8c', '#8c2c2c',
+      '#e67e22', '#27ae60', '#8e44ad', '#2980b9', '#c0392b', '#16a085', '#d35400',
+      '#1abc9c', '#9b59b6', '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#34495e'
+    ];
+
+    // Generate color from string hash
+    function stringToColor(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return BOOK_COLORS[Math.abs(hash) % BOOK_COLORS.length];
+    }
+
+    // Shelf configurations
+    const SHELVES = {
+      back: {
+        parent: 'bookshelf-back',
+        shelves: [
+          { y: 0.8, width: 5.4, z: 0.15 },   // bottom
+          { y: 1.6, width: 5.4, z: 0.15 },
+          { y: 2.4, width: 5.4, z: 0.15 },
+          { y: 3.2, width: 5.4, z: 0.15 },   // top
+        ]
+      },
+      left: {
+        parent: 'bookshelf-left',
+        shelves: [
+          { y: 0.7, width: 3.4, z: 0.15 },
+          { y: 1.4, width: 3.4, z: 0.15 },
+          { y: 2.1, width: 3.4, z: 0.15 },
+        ]
+      },
+      right: {
+        parent: 'bookshelf-right',
+        shelves: [
+          { y: 0.7, width: 3.4, z: 0.15 },
+          { y: 1.4, width: 3.4, z: 0.15 },
+          { y: 2.1, width: 3.4, z: 0.15 },
+        ]
+      }
+    };
+
+    // Create a book entity
+    function createBook(book, x, y, z) {
+      const el = document.createElement('a-box');
+      const width = 0.08 + Math.random() * 0.06;
+      const height = 0.5 + Math.random() * 0.2;
+      const depth = 0.2;
+
+      el.setAttribute('position', `${x} ${y + height/2} ${z}`);
+      el.setAttribute('width', width);
+      el.setAttribute('height', height);
+      el.setAttribute('depth', depth);
+      el.setAttribute('color', stringToColor(book.title));
+      el.setAttribute('class', 'book');
+      el.setAttribute('data-title', book.title);
+      el.setAttribute('data-author', book.author);
+      el.setAttribute('data-sample', book.isSample ? 'true' : 'false');
+
+      // Hover events
+      el.addEventListener('mouseenter', showBookInfo);
+      el.addEventListener('mouseleave', hideBookInfo);
+
+      return { el, width };
+    }
+
+    // Show book info popup
+    function showBookInfo(evt) {
+      const el = evt.target;
+      const info = document.getElementById('book-info');
+      info.querySelector('.title').textContent = el.getAttribute('data-title');
+      info.querySelector('.author').textContent = 'by ' + el.getAttribute('data-author');
+      info.querySelector('.sample').textContent = el.getAttribute('data-sample') === 'true' ? '(Sample)' : '';
+      info.classList.add('visible');
+    }
+
+    function hideBookInfo() {
+      document.getElementById('book-info').classList.remove('visible');
+    }
+
+    // Place books on shelves
+    function placeBooks(books) {
+      const container = document.getElementById('books-container');
+      let bookIndex = 0;
+
+      // Distribute books across shelves
+      const shelfGroups = ['back', 'left', 'right'];
+
+      for (const groupName of shelfGroups) {
+        const group = SHELVES[groupName];
+        const parent = document.getElementById(group.parent);
+
+        for (const shelf of group.shelves) {
+          let x = -shelf.width / 2 + 0.1;
+
+          while (x < shelf.width / 2 - 0.1 && bookIndex < books.length) {
+            const book = books[bookIndex];
+            const { el, width } = createBook(book, x, shelf.y, shelf.z);
+            parent.appendChild(el);
+
+            x += width + 0.02 + Math.random() * 0.03; // Small gap between books
+            bookIndex++;
+          }
+        }
+      }
+
+      document.getElementById('stats').textContent = `${bookIndex} books displayed`;
+    }
+
+    // Load library and create books
+    fetch('kindle_library.json')
+      .then(r => r.json())
+      .then(books => {
+        // Filter out samples if desired, or keep all
+        // const owned = books.filter(b => !b.isSample);
+        placeBooks(books);
+      })
+      .catch(err => {
+        console.error('Failed to load library:', err);
+        document.getElementById('stats').textContent = 'Failed to load library. Run locally with a server.';
+      });
+  </script>
 </body>
 </html>
