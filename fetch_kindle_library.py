@@ -19,7 +19,8 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent
-BROWSER_PROFILE = SCRIPT_DIR / ".browser_profile"
+ASSETS_DIR = Path.home() / "Documents" / "threedeehome"
+BROWSER_PROFILE = ASSETS_DIR / ".browser_profile"
 OUTPUT_FILE = SCRIPT_DIR / "kindle_library.json"
 
 KINDLE_URL = "https://read.amazon.com/kindle-library"
