@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Upper West Side Statues - Detail Comparison</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #info {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(250, 248, 245, 0.95);
+      color: rgba(60, 50, 40, 0.9);
+      padding: 20px 30px;
+      border-radius: 4px;
+      font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+      font-size: 15px;
+      max-width: 700px;
+      text-align: center;
+      line-height: 1.6;
+      z-index: 1000;
+      border: 1px solid rgba(180, 170, 160, 0.4);
+    }
+    #title {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: rgba(80, 70, 60, 0.8);
+      font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+      font-size: 18px;
+      z-index: 1000;
+    }
+    #stats {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      color: rgba(80, 70, 60, 0.8);
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 1000;
+      text-align: right;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <div id="title">Upper West Side Collection - Detail Comparison</div>
+  <div id="stats">
+    <strong>MEDIUM (10-25 primitives)</strong><br>
+    herring_elder: 18 meshes, 95 KB<br>
+    pizza_dispute: 19 meshes, 87 KB<br>
+    vaping_barista: 19 meshes, 80 KB<br>
+    <br>
+    <strong>HIGH (~250 primitives)</strong><br>
+    herring_elder_high: 128 meshes, 583 KB<br>
+    pizza_dispute_high: 131 meshes, 553 KB<br>
+    vaping_barista_high: 181 meshes, 659 KB
+  </div>
+  <div id="info">
+    WASD to move, mouse to look.<br>
+    <strong>Front row:</strong> MEDIUM detail &nbsp;|&nbsp; <strong>Back row:</strong> HIGH detail
+  </div>
+
+  <a-scene fog="type: exponential; color: #e8e4e0; density: 0.012" background="color: #f0ece8">
+
+    <a-assets>
+      <!-- Medium detail -->
+      <a-asset-item id="model-herring_elder" src="models/herring_elder.gltf"></a-asset-item>
+      <a-asset-item id="model-pizza_dispute" src="models/pizza_dispute.gltf"></a-asset-item>
+      <a-asset-item id="model-vaping_barista" src="models/vaping_barista.gltf"></a-asset-item>
+      <!-- High detail -->
+      <a-asset-item id="model-herring_elder_high" src="models/herring_elder_high.gltf"></a-asset-item>
+      <a-asset-item id="model-pizza_dispute_high" src="models/pizza_dispute_high.gltf"></a-asset-item>
+      <a-asset-item id="model-vaping_barista_high" src="models/vaping_barista_high.gltf"></a-asset-item>
+    </a-assets>
+
+    <!-- Player -->
+    <a-entity id="rig" position="0 0 8">
+      <a-entity
+        id="camera"
+        camera
+        look-controls="pointerLockEnabled: true"
+        wasd-controls="acceleration: 30"
+        position="0 1.6 0">
+      </a-entity>
+    </a-entity>
+
+    <!-- Lighting -->
+    <a-light type="ambient" color="#fffef8" intensity="0.4"></a-light>
+    <a-light type="hemisphere" color="#ffffff" ground-color="#d8d4cc" intensity="0.3"></a-light>
+    <a-light type="point" color="#fffef5" intensity="0.6" position="0 8 2" decay="1" distance="40"></a-light>
+    <a-light type="point" color="#fffef5" intensity="0.4" position="0 8 -4" decay="1" distance="40"></a-light>
+
+    <!-- Floor -->
+    <a-plane position="0 0 0" rotation="-90 0 0" width="40" height="40" color="#f5f2ee" material="roughness: 1; metalness: 0"></a-plane>
+
+    <!-- ==================== FRONT ROW: MEDIUM DETAIL ==================== -->
+
+    <!-- The Herring Elder (Medium) -->
+    <a-entity id="statue-herring-med" position="-5 0 2" rotation="0 0 0">
+      <a-entity gltf-model="#model-herring_elder" scale="2.5 2.5 2.5"></a-entity>
+      <a-box position="0 -0.3 0" width="1.5" height="0.6" depth="1.5" color="#e8e4e0" material="roughness: 1; metalness: 0"></a-box>
+      <a-text value="The Herring Elder\n(MEDIUM: 18 meshes)" position="0 -0.8 0.8" align="center" color="#5a5048" width="2.5"></a-text>
+    </a-entity>
+
+    <!-- The Pizza Dispute (Medium) -->
+    <a-entity id="statue-pizza-med" position="0 0 2" rotation="0 0 0">
+      <a-entity gltf-model="#model-pizza_dispute" scale="3 3 3" position="0 0.5 0"></a-entity>
+      <a-box position="0 -0.3 0" width="1.8" height="0.6" depth="1.8" color="#e8e4e0" material="roughness: 1; metalness: 0"></a-box>
+      <a-text value="The Pizza Dispute\n(MEDIUM: 19 meshes)" position="0 -0.8 0.9" align="center" color="#5a5048" width="2.5"></a-text>
+    </a-entity>
+
+    <!-- The Vaping Barista (Medium) -->
+    <a-entity id="statue-barista-med" position="5 0 2" rotation="0 0 0">
+      <a-entity gltf-model="#model-vaping_barista" scale="2.5 2.5 2.5"></a-entity>
+      <a-box position="0 -0.3 0" width="1.5" height="0.6" depth="1.5" color="#e8e4e0" material="roughness: 1; metalness: 0"></a-box>
+      <a-text value="The Vaping Barista\n(MEDIUM: 19 meshes)" position="0 -0.8 0.8" align="center" color="#5a5048" width="2.5"></a-text>
+    </a-entity>
+
+    <!-- ==================== BACK ROW: HIGH DETAIL ==================== -->
+
+    <!-- The Herring Elder (High) -->
+    <a-entity id="statue-herring-high" position="-5 0 -4" rotation="0 0 0">
+      <a-entity gltf-model="#model-herring_elder_high" scale="2.5 2.5 2.5"></a-entity>
+      <a-box position="0 -0.3 0" width="1.5" height="0.6" depth="1.5" color="#d8d4cc" material="roughness: 1; metalness: 0"></a-box>
+      <a-text value="The Herring Elder\n(HIGH: 128 meshes)" position="0 -0.8 0.8" align="center" color="#5a5048" width="2.5"></a-text>
+    </a-entity>
+
+    <!-- The Pizza Dispute (High) -->
+    <a-entity id="statue-pizza-high" position="0 0 -4" rotation="0 0 0">
+      <a-entity gltf-model="#model-pizza_dispute_high" scale="3 3 3" position="0 0.5 0"></a-entity>
+      <a-box position="0 -0.3 0" width="1.8" height="0.6" depth="1.8" color="#d8d4cc" material="roughness: 1; metalness: 0"></a-box>
+      <a-text value="The Pizza Dispute\n(HIGH: 131 meshes)" position="0 -0.8 0.9" align="center" color="#5a5048" width="2.5"></a-text>
+    </a-entity>
+
+    <!-- The Vaping Barista (High) -->
+    <a-entity id="statue-barista-high" position="5 0 -4" rotation="0 0 0">
+      <a-entity gltf-model="#model-vaping_barista_high" scale="2.5 2.5 2.5"></a-entity>
+      <a-box position="0 -0.3 0" width="1.5" height="0.6" depth="1.5" color="#d8d4cc" material="roughness: 1; metalness: 0"></a-box>
+      <a-text value="The Vaping Barista\n(HIGH: 181 meshes)" position="0 -0.8 0.8" align="center" color="#5a5048" width="2.5"></a-text>
+    </a-entity>
+
+    <!-- Divider line between rows -->
+    <a-box position="0 0.02 -1" width="16" height="0.04" depth="0.1" color="#c8c4bc" material="roughness: 1; metalness: 0"></a-box>
+
+    <!-- Row labels -->
+    <a-text value="MEDIUM DETAIL" position="-8 0.5 2" rotation="0 90 0" align="center" color="#8a8078" width="6"></a-text>
+    <a-text value="HIGH DETAIL" position="-8 0.5 -4" rotation="0 90 0" align="center" color="#8a8078" width="6"></a-text>
+
+    <!-- Back wall -->
+    <a-plane position="0 4 -8" width="25" height="10" color="#f0ede8" material="roughness: 1; metalness: 0"></a-plane>
+
+  </a-scene>
+</body>
+</html>

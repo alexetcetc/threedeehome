@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>The Upper West Side - A Gallery of the Mundane Sacred</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+
+    #location {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: rgba(70, 65, 60, 0.85);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      z-index: 1000;
+      text-shadow: 0 0 8px rgba(255,255,255,0.9);
+    }
+
+    #journal {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: rgba(50, 48, 45, 0.9);
+      padding: 20px 30px;
+      border-radius: 2px;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      max-width: 550px;
+      text-align: center;
+      line-height: 1.7;
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+      z-index: 1000;
+      border: 1px solid rgba(200, 195, 190, 0.5);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    #journal.visible { opacity: 1; }
+    #journal strong {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div id="location">The Entrance</div>
+  <div id="journal"></div>
+
+  <a-scene fog="type: exponential; color: #f5f4f2; density: 0.008" background="color: #fafaf8">
+
+    <a-assets>
+      <!-- High detail UWS statues -->
+      <a-asset-item id="model-herring_elder" src="models/herring_elder_high.gltf"></a-asset-item>
+      <a-asset-item id="model-pizza_dispute" src="models/pizza_dispute_high.gltf"></a-asset-item>
+      <a-asset-item id="model-vaping_barista" src="models/vaping_barista_high.gltf"></a-asset-item>
+      <a-asset-item id="model-floor_mattress" src="models/floor_mattress.gltf"></a-asset-item>
+    </a-assets>
+
+    <!-- Player -->
+    <a-entity id="rig" position="0 0 12">
+      <a-entity
+        id="camera"
+        camera
+        look-controls="pointerLockEnabled: true"
+        wasd-controls="acceleration: 30"
+        position="0 1.6 0"
+        raycaster="objects: .trigger, .door-back; far: 8"
+        cursor="rayOrigin: mouse">
+      </a-entity>
+    </a-entity>
+
+    <!-- Lighting - clean, gallery-style -->
+    <a-light type="ambient" color="#ffffff" intensity="0.35"></a-light>
+    <a-light type="hemisphere" color="#ffffff" ground-color="#e8e6e4" intensity="0.25"></a-light>
+    <a-entity id="player-light" light="type: point; color: #fff8f0; intensity: 0.15; decay: 1.5; distance: 25"></a-entity>
+
+    <!-- The Gallery -->
+    <a-entity id="gallery"></a-entity>
+
+  </a-scene>
+
+  <script>
+    // ============================================================
+    // THE UPPER WEST SIDE
+    // A gallery of contemporary NYC moments rendered in marble
+    // ============================================================
+
+    const STATUES = [
+      {
+        id: "herring_elder",
+        name: "The Herring Elder",
+        desc: "He holds the jar as one might hold an urn of ashes or a reliquary. The herring float suspended in perpetual brine. Some provisions transcend mere sustenance."
+      },
+      {
+        id: "pizza_dispute",
+        name: "The Pizza Dispute",
+        desc: "The eternal struggle rendered in marble. Three claimants, one prize. The cheese stretches but does not break. In this tableau, all the commerce and conflict of the city finds its truest expression."
+      },
+      {
+        id: "vaping_barista",
+        name: "The Vaping Barista",
+        desc: "Between the morning rush and afternoon lull, he communes with vapor and glass. The wall accepts his weight. The algorithm offers its small rewards. He is briefly, blessedly, nowhere."
+      },
+      {
+        id: "floor_mattress",
+        name: "The Floor Mattress",
+        desc: "Economy of space or refusal of convention? The laptop glows beside rumpled sheets. The water glass stands sentinel. This is home distilled to its essentials: rest, work, thirst."
+      }
+    ];
+
+    // Gallery configuration - modern, clean proportions
+    const GALLERY = {
+      width: 24,
+      length: 40,
+      height: 12,
+      wallColor: '#faf9f7',
+      floorColor: '#e8e6e4',
+      accentColor: '#d4d2d0'
+    };
+
+    const HALL_NAMES = [
+      "The Entrance",
+      "Gallery One: Daily Rituals",
+      "Gallery Two: Observers",
+      "Gallery Three: Workers",
+      "Gallery Four: Couples",
+      "Gallery Five: Animals",
+      "Gallery Six: Professionals"
+    ];
+
+    function buildGallery() {
+      const gallery = document.getElementById('gallery');
+
+      // Main gallery space
+      createMainHall(gallery);
+
+      // Place statues in gallery
+      STATUES.forEach((statue, i) => {
+        const spacing = 6;
+        const x = (i - 1.5) * spacing; // -9, -3, 3, 9
+        const z = 0;
+        const entity = createStatue(statue, x, z);
+        gallery.appendChild(entity);
+      });
+
+      // Create entrance with door back
+      createEntrance(gallery);
+
+      // Future galleries placeholder
+      createFutureGalleryHint(gallery);
+    }
+
+    function createMainHall(gallery) {
+      const hw = GALLERY.width / 2;
+      const hl = GALLERY.length / 2;
+      const h = GALLERY.height;
+
+      // Floor - polished concrete look
+      const floor = document.createElement('a-plane');
+      floor.setAttribute('position', `0 0.01 0`);
+      floor.setAttribute('rotation', '-90 0 0');
+      floor.setAttribute('width', GALLERY.width);
+      floor.setAttribute('height', GALLERY.length);
+      floor.setAttribute('color', GALLERY.floorColor);
+      floor.setAttribute('material', 'roughness: 0.3; metalness: 0.1');
+      gallery.appendChild(floor);
+
+      // Ceiling - clean white
+      const ceiling = document.createElement('a-plane');
+      ceiling.setAttribute('position', `0 ${h} 0`);
+      ceiling.setAttribute('rotation', '90 0 0');
+      ceiling.setAttribute('width', GALLERY.width);
+      ceiling.setAttribute('height', GALLERY.length);
+      ceiling.setAttribute('color', '#ffffff');
+      ceiling.setAttribute('material', 'roughness: 1; metalness: 0');
+      gallery.appendChild(ceiling);
+
+      // Walls
+      // West wall
+      const westWall = document.createElement('a-plane');
+      westWall.setAttribute('position', `${-hw} ${h/2} 0`);
+      westWall.setAttribute('rotation', '0 90 0');
+      westWall.setAttribute('width', GALLERY.length);
+      westWall.setAttribute('height', h);
+      westWall.setAttribute('color', GALLERY.wallColor);
+      westWall.setAttribute('material', 'roughness: 1; metalness: 0');
+      gallery.appendChild(westWall);
+
+      // East wall
+      const eastWall = document.createElement('a-plane');
+      eastWall.setAttribute('position', `${hw} ${h/2} 0`);
+      eastWall.setAttribute('rotation', '0 -90 0');
+      eastWall.setAttribute('width', GALLERY.length);
+      eastWall.setAttribute('height', h);
+      eastWall.setAttribute('color', GALLERY.wallColor);
+      eastWall.setAttribute('material', 'roughness: 1; metalness: 0');
+      gallery.appendChild(eastWall);
+
+      // North wall (with opening to future galleries)
+      const northWallL = document.createElement('a-plane');
+      northWallL.setAttribute('position', `${-hw/2 - 2} ${h/2} ${-hl}`);
+      northWallL.setAttribute('rotation', '0 0 0');
+      northWallL.setAttribute('width', hw - 4);
+      northWallL.setAttribute('height', h);
+      northWallL.setAttribute('color', GALLERY.wallColor);
+      northWallL.setAttribute('material', 'roughness: 1; metalness: 0');
+      gallery.appendChild(northWallL);
+
+      const northWallR = document.createElement('a-plane');
+      northWallR.setAttribute('position', `${hw/2 + 2} ${h/2} ${-hl}`);
+      northWallR.setAttribute('rotation', '0 0 0');
+      northWallR.setAttribute('width', hw - 4);
+      northWallR.setAttribute('height', h);
+      northWallR.setAttribute('color', GALLERY.wallColor);
+      northWallR.setAttribute('material', 'roughness: 1; metalness: 0');
+      gallery.appendChild(northWallR);
+
+      const northWallTop = document.createElement('a-plane');
+      northWallTop.setAttribute('position', `0 ${h - 2} ${-hl}`);
+      northWallTop.setAttribute('rotation', '0 0 0');
+      northWallTop.setAttribute('width', 8);
+      northWallTop.setAttribute('height', 4);
+      northWallTop.setAttribute('color', GALLERY.wallColor);
+      northWallTop.setAttribute('material', 'roughness: 1; metalness: 0');
+      gallery.appendChild(northWallTop);
+
+      // Track lighting (minimalist)
+      const trackPositions = [-6, 0, 6];
+      trackPositions.forEach(x => {
+        // Track bar
+        const track = document.createElement('a-box');
+        track.setAttribute('position', `${x} ${h - 0.5} 0`);
+        track.setAttribute('width', '0.08');
+        track.setAttribute('height', '0.08');
+        track.setAttribute('depth', GALLERY.length - 4);
+        track.setAttribute('color', '#333');
+        track.setAttribute('material', 'roughness: 0.5; metalness: 0.5');
+        gallery.appendChild(track);
+
+        // Spot lights along track
+        for (let z = -12; z <= 12; z += 8) {
+          const spot = document.createElement('a-light');
+          spot.setAttribute('type', 'spot');
+          spot.setAttribute('color', '#fff8f0');
+          spot.setAttribute('intensity', '0.6');
+          spot.setAttribute('position', `${x} ${h - 0.6} ${z}`);
+          spot.setAttribute('angle', '35');
+          spot.setAttribute('penumbra', '0.3');
+          spot.setAttribute('target', `${x} 0 ${z}`);
+          spot.setAttribute('decay', '1.5');
+          spot.setAttribute('distance', '15');
+          gallery.appendChild(spot);
+        }
+      });
+
+      // Accent strip at floor level
+      const accentStrip = document.createElement('a-box');
+      accentStrip.setAttribute('position', `0 0.05 0`);
+      accentStrip.setAttribute('width', GALLERY.width - 0.5);
+      accentStrip.setAttribute('height', '0.1');
+      accentStrip.setAttribute('depth', GALLERY.length - 0.5);
+      accentStrip.setAttribute('color', GALLERY.accentColor);
+      accentStrip.setAttribute('material', 'roughness: 0.4; metalness: 0.1');
+      gallery.appendChild(accentStrip);
+    }
+
+    function createStatue(data, x, z) {
+      const statue = document.createElement('a-entity');
+      statue.classList.add('statue');
+      statue.id = `statue-${data.id}`;
+      statue.setAttribute('position', `${x} 0 ${z}`);
+      statue.dataset.name = data.name;
+      statue.dataset.description = data.desc;
+
+      // Trigger volume
+      const trigger = document.createElement('a-box');
+      trigger.classList.add('trigger');
+      trigger.setAttribute('position', '0 2.5 0');
+      trigger.setAttribute('width', '3');
+      trigger.setAttribute('height', '5');
+      trigger.setAttribute('depth', '3');
+      trigger.setAttribute('visible', 'false');
+      statue.appendChild(trigger);
+
+      // Model - using high detail versions
+      const model = document.createElement('a-entity');
+      model.setAttribute('gltf-model', `#model-${data.id}`);
+
+      // Adjust scale based on statue
+      let scale = 2.5;
+      let yOffset = 0;
+      if (data.id === 'pizza_dispute') {
+        scale = 4;
+        yOffset = 0.6;
+      } else if (data.id === 'floor_mattress') {
+        scale = 3;
+        yOffset = 0.4;
+      }
+      model.setAttribute('scale', `${scale} ${scale} ${scale}`);
+      model.setAttribute('position', `0 ${yOffset} 0`);
+      statue.appendChild(model);
+
+      // Pedestal - clean modern block
+      const pedestal = document.createElement('a-box');
+      pedestal.setAttribute('position', '0 -0.4 0');
+      pedestal.setAttribute('width', '1.8');
+      pedestal.setAttribute('height', '0.8');
+      pedestal.setAttribute('depth', '1.8');
+      pedestal.setAttribute('color', '#ffffff');
+      pedestal.setAttribute('material', 'roughness: 0.2; metalness: 0.05');
+      statue.appendChild(pedestal);
+
+      // Pedestal caption (small, modern)
+      const caption = document.createElement('a-plane');
+      caption.setAttribute('position', '0 -0.75 0.91');
+      caption.setAttribute('width', '1.2');
+      caption.setAttribute('height', '0.15');
+      caption.setAttribute('color', '#333');
+      caption.setAttribute('material', 'roughness: 1; metalness: 0');
+      statue.appendChild(caption);
+
+      // Interaction
+      trigger.addEventListener('mouseenter', () => {
+        document.getElementById('journal').innerHTML = `<strong>${data.name}</strong>${data.desc}`;
+        document.getElementById('journal').classList.add('visible');
+      });
+      trigger.addEventListener('mouseleave', () => {
+        document.getElementById('journal').classList.remove('visible');
+      });
+
+      return statue;
+    }
+
+    function createEntrance(gallery) {
+      const hl = GALLERY.length / 2;
+      const h = GALLERY.height;
+
+      // South wall with door
+      const southWallL = document.createElement('a-plane');
+      southWallL.setAttribute('position', `-7 ${h/2} ${hl}`);
+      southWallL.setAttribute('rotation', '0 180 0');
+      southWallL.setAttribute('width', '10');
+      southWallL.setAttribute('height', h);
+      southWallL.setAttribute('color', GALLERY.wallColor);
+      southWallL.setAttribute('material', 'roughness: 1; metalness: 0');
+      gallery.appendChild(southWallL);
+
+      const southWallR = document.createElement('a-plane');
+      southWallR.setAttribute('position', `7 ${h/2} ${hl}`);
+      southWallR.setAttribute('rotation', '0 180 0');
+      southWallR.setAttribute('width', '10');
+      southWallR.setAttribute('height', h);
+      southWallR.setAttribute('color', GALLERY.wallColor);
+      southWallR.setAttribute('material', 'roughness: 1; metalness: 0');
+      gallery.appendChild(southWallR);
+
+      const southWallTop = document.createElement('a-plane');
+      southWallTop.setAttribute('position', `0 ${h - 1.5} ${hl}`);
+      southWallTop.setAttribute('rotation', '0 180 0');
+      southWallTop.setAttribute('width', '4');
+      southWallTop.setAttribute('height', '3');
+      southWallTop.setAttribute('color', GALLERY.wallColor);
+      southWallTop.setAttribute('material', 'roughness: 1; metalness: 0');
+      gallery.appendChild(southWallTop);
+
+      // Door frame
+      const frameL = document.createElement('a-box');
+      frameL.setAttribute('position', `-2.1 ${4.5} ${hl}`);
+      frameL.setAttribute('width', '0.15');
+      frameL.setAttribute('height', '9');
+      frameL.setAttribute('depth', '0.3');
+      frameL.setAttribute('color', '#2a2a2a');
+      frameL.setAttribute('material', 'roughness: 0.3; metalness: 0.3');
+      gallery.appendChild(frameL);
+
+      const frameR = document.createElement('a-box');
+      frameR.setAttribute('position', `2.1 ${4.5} ${hl}`);
+      frameR.setAttribute('width', '0.15');
+      frameR.setAttribute('height', '9');
+      frameR.setAttribute('depth', '0.3');
+      frameR.setAttribute('color', '#2a2a2a');
+      frameR.setAttribute('material', 'roughness: 0.3; metalness: 0.3');
+      gallery.appendChild(frameR);
+
+      const frameTop = document.createElement('a-box');
+      frameTop.setAttribute('position', `0 ${9.1} ${hl}`);
+      frameTop.setAttribute('width', '4.4');
+      frameTop.setAttribute('height', '0.15');
+      frameTop.setAttribute('depth', '0.3');
+      frameTop.setAttribute('color', '#2a2a2a');
+      frameTop.setAttribute('material', 'roughness: 0.3; metalness: 0.3');
+      gallery.appendChild(frameTop);
+
+      // Door
+      const door = document.createElement('a-box');
+      door.classList.add('door-back');
+      door.id = 'door-to-library';
+      door.setAttribute('position', `0 4.5 ${hl + 0.15}`);
+      door.setAttribute('width', '4');
+      door.setAttribute('height', '9');
+      door.setAttribute('depth', '0.08');
+      door.setAttribute('color', '#1a1a1a');
+      door.setAttribute('material', 'roughness: 0.4; metalness: 0.2');
+      gallery.appendChild(door);
+
+      // Exit sign
+      const exitSign = document.createElement('a-text');
+      exitSign.setAttribute('value', 'EXIT TO LIBRARY');
+      exitSign.setAttribute('position', `0 10 ${hl - 0.1}`);
+      exitSign.setAttribute('rotation', '0 180 0');
+      exitSign.setAttribute('align', 'center');
+      exitSign.setAttribute('color', '#666');
+      exitSign.setAttribute('width', '4');
+      gallery.appendChild(exitSign);
+
+      // Gallery title on entrance wall
+      const title = document.createElement('a-text');
+      title.setAttribute('value', 'THE UPPER WEST SIDE');
+      title.setAttribute('position', `0 8 ${hl - 3}`);
+      title.setAttribute('rotation', '0 180 0');
+      title.setAttribute('align', 'center');
+      title.setAttribute('color', '#333');
+      title.setAttribute('width', '12');
+      gallery.appendChild(title);
+
+      const subtitle = document.createElement('a-text');
+      subtitle.setAttribute('value', 'Scenes from the Mundane Sacred');
+      subtitle.setAttribute('position', `0 7 ${hl - 3}`);
+      subtitle.setAttribute('rotation', '0 180 0');
+      subtitle.setAttribute('align', 'center');
+      subtitle.setAttribute('color', '#888');
+      subtitle.setAttribute('width', '6');
+      gallery.appendChild(subtitle);
+    }
+
+    function createFutureGalleryHint(gallery) {
+      const hl = GALLERY.length / 2;
+
+      // Sign pointing to future galleries
+      const sign = document.createElement('a-text');
+      sign.setAttribute('value', '→ MORE GALLERIES COMING SOON');
+      sign.setAttribute('position', `0 5 ${-hl + 1}`);
+      sign.setAttribute('align', 'center');
+      sign.setAttribute('color', '#aaa');
+      sign.setAttribute('width', '5');
+      gallery.appendChild(sign);
+
+      // Barrier
+      const barrier = document.createElement('a-box');
+      barrier.setAttribute('position', `0 0.5 ${-hl + 0.5}`);
+      barrier.setAttribute('width', '6');
+      barrier.setAttribute('height', '1');
+      barrier.setAttribute('depth', '0.1');
+      barrier.setAttribute('color', '#ddd');
+      barrier.setAttribute('material', 'roughness: 0.5; metalness: 0.1');
+      gallery.appendChild(barrier);
+    }
+
+    function updateLocation() {
+      const rig = document.getElementById('rig');
+      const pos = rig.getAttribute('position');
+      const playerLight = document.getElementById('player-light');
+
+      // Update player light
+      playerLight.setAttribute('position', `${pos.x} ${pos.y + 2} ${pos.z}`);
+
+      // Determine location
+      let location = "The Gallery";
+      if (pos.z > 15) {
+        location = "The Entrance";
+      } else if (pos.z < -15) {
+        location = "Future Galleries";
+      } else {
+        location = "Gallery One: First Observations";
+      }
+      document.getElementById('location').textContent = location;
+    }
+
+    function setupDoor() {
+      const door = document.getElementById('door-to-library');
+      if (door) {
+        door.addEventListener('click', () => {
+          window.location.href = 'index.html';
+        });
+        door.addEventListener('mouseenter', () => {
+          door.setAttribute('color', '#2a2a2a');
+        });
+        door.addEventListener('mouseleave', () => {
+          door.setAttribute('color', '#1a1a1a');
+        });
+      }
+    }
+
+    // Initialize
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      buildGallery();
+      setupDoor();
+      setInterval(updateLocation, 200);
+    });
+  </script>
+</body>
+</html>

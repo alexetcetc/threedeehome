@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>The House - Infinite Halls</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+
+    #location {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: rgba(80, 70, 60, 0.8);
+      font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+      font-size: 14px;
+      font-style: italic;
+      z-index: 1000;
+      text-shadow: 0 0 8px rgba(255,255,255,0.9);
+    }
+
+    #journal {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(250, 248, 245, 0.95);
+      color: rgba(60, 50, 40, 0.9);
+      padding: 20px 30px;
+      border-radius: 4px;
+      font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+      font-size: 15px;
+      max-width: 600px;
+      text-align: center;
+      line-height: 1.6;
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+      z-index: 1000;
+      border: 1px solid rgba(180, 170, 160, 0.4);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    }
+    #journal.visible { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div id="location">The Entrance Vestibule</div>
+  <div id="journal"></div>
+
+  <a-scene fog="type: exponential; color: #e8e4e0; density: 0.006" background="color: #f0ece8">
+
+    <!-- All 52 Statue Models -->
+    <a-assets>
+      <audio id="wind-ambient" src="audio/wind1.mp3" preload="auto"></audio>
+
+      <a-asset-item id="model-angel_rose_bush" src="models/angel_rose_bush.gltf"></a-asset-item>
+      <a-asset-item id="model-angel_trumpet_medium" src="models/angel_trumpet_medium.gltf"></a-asset-item>
+      <a-asset-item id="model-beehive_woman" src="models/beehive_woman.gltf"></a-asset-item>
+      <a-asset-item id="model-boy_cymbals" src="models/boy_cymbals.gltf"></a-asset-item>
+      <a-asset-item id="model-broken_finger_medium" src="models/broken_finger_medium.gltf"></a-asset-item>
+      <a-asset-item id="model-chess_kings" src="models/chess_kings.gltf"></a-asset-item>
+      <a-asset-item id="model-child_flower" src="models/child_flower.gltf"></a-asset-item>
+      <a-asset-item id="model-child_tortoise" src="models/child_tortoise.gltf"></a-asset-item>
+      <a-asset-item id="model-children_flute" src="models/children_flute.gltf"></a-asset-item>
+      <a-asset-item id="model-crowd_temple" src="models/crowd_temple.gltf"></a-asset-item>
+      <a-asset-item id="model-elderly_king" src="models/elderly_king.gltf"></a-asset-item>
+      <a-asset-item id="model-elephant_castle_medium" src="models/elephant_castle_medium.gltf"></a-asset-item>
+      <a-asset-item id="model-elephant_plain" src="models/elephant_plain.gltf"></a-asset-item>
+      <a-asset-item id="model-father_son_thorn" src="models/father_son_thorn.gltf"></a-asset-item>
+      <a-asset-item id="model-faun" src="models/faun.gltf"></a-asset-item>
+      <a-asset-item id="model-fox_teacher" src="models/fox_teacher.gltf"></a-asset-item>
+      <a-asset-item id="model-gardener" src="models/gardener.gltf"></a-asset-item>
+      <a-asset-item id="model-gardener_roses" src="models/gardener_roses.gltf"></a-asset-item>
+      <a-asset-item id="model-good_king" src="models/good_king.gltf"></a-asset-item>
+      <a-asset-item id="model-gorilla" src="models/gorilla.gltf"></a-asset-item>
+      <a-asset-item id="model-grain_mice" src="models/grain_mice.gltf"></a-asset-item>
+      <a-asset-item id="model-heretical_pope" src="models/heretical_pope.gltf"></a-asset-item>
+      <a-asset-item id="model-hermit_lantern" src="models/hermit_lantern.gltf"></a-asset-item>
+      <a-asset-item id="model-horned_giants" src="models/horned_giants.gltf"></a-asset-item>
+      <a-asset-item id="model-imana_turning" src="models/imana_turning.gltf"></a-asset-item>
+      <a-asset-item id="model-kalumba_baskets" src="models/kalumba_baskets.gltf"></a-asset-item>
+      <a-asset-item id="model-lion_coral_cage" src="models/lion_coral_cage.gltf"></a-asset-item>
+      <a-asset-item id="model-man_book" src="models/man_book.gltf"></a-asset-item>
+      <a-asset-item id="model-man_centaur" src="models/man_centaur.gltf"></a-asset-item>
+      <a-asset-item id="model-man_coral_fire" src="models/man_coral_fire.gltf"></a-asset-item>
+      <a-asset-item id="model-man_serpents" src="models/man_serpents.gltf"></a-asset-item>
+      <a-asset-item id="model-man_shattered_sword" src="models/man_shattered_sword.gltf"></a-asset-item>
+      <a-asset-item id="model-mbombo_creation" src="models/mbombo_creation.gltf"></a-asset-item>
+      <a-asset-item id="model-minotaur_burden" src="models/minotaur_burden.gltf"></a-asset-item>
+      <a-asset-item id="model-minotaur_guard" src="models/minotaur_guard.gltf"></a-asset-item>
+      <a-asset-item id="model-minotaur_mourning" src="models/minotaur_mourning.gltf"></a-asset-item>
+      <a-asset-item id="model-minotaur_pointing" src="models/minotaur_pointing.gltf"></a-asset-item>
+      <a-asset-item id="model-minotaur_raging" src="models/minotaur_raging.gltf"></a-asset-item>
+      <a-asset-item id="model-minotaur_rest" src="models/minotaur_rest.gltf"></a-asset-item>
+      <a-asset-item id="model-minotaur_seated" src="models/minotaur_seated.gltf"></a-asset-item>
+      <a-asset-item id="model-minotaur_walking" src="models/minotaur_walking.gltf"></a-asset-item>
+      <a-asset-item id="model-nyiragongo_keeper" src="models/nyiragongo_keeper.gltf"></a-asset-item>
+      <a-asset-item id="model-old_man_ship" src="models/old_man_ship.gltf"></a-asset-item>
+      <a-asset-item id="model-pegasus_colt" src="models/pegasus_colt.gltf"></a-asset-item>
+      <a-asset-item id="model-queen_chariot" src="models/queen_chariot.gltf"></a-asset-item>
+      <a-asset-item id="model-ryangombe_buffalo" src="models/ryangombe_buffalo.gltf"></a-asset-item>
+      <a-asset-item id="model-shellfish_figure" src="models/shellfish_figure.gltf"></a-asset-item>
+      <a-asset-item id="model-shepherdess_lamb" src="models/shepherdess_lamb.gltf"></a-asset-item>
+      <a-asset-item id="model-ship_waves" src="models/ship_waves.gltf"></a-asset-item>
+      <a-asset-item id="model-star_mappers" src="models/star_mappers.gltf"></a-asset-item>
+      <a-asset-item id="model-woman_cloud_shield" src="models/woman_cloud_shield.gltf"></a-asset-item>
+      <a-asset-item id="model-woman_coral_crown" src="models/woman_coral_crown.gltf"></a-asset-item>
+    </a-assets>
+
+    <!-- Player -->
+    <a-entity id="rig" position="0 0 8">
+      <a-entity
+        id="camera"
+        camera
+        look-controls="pointerLockEnabled: true"
+        wasd-controls="acceleration: 30"
+        position="0 1.6 0"
+        raycaster="objects: .trigger, .door-back; far: 8"
+        cursor="rayOrigin: mouse">
+      </a-entity>
+    </a-entity>
+
+    <!-- Lighting (reduced 40%) -->
+    <a-light type="ambient" color="#fffef8" intensity="0.21"></a-light>
+    <a-light type="hemisphere" color="#ffffff" ground-color="#d8d4cc" intensity="0.15"></a-light>
+    <a-entity id="player-light" light="type: point; color: #fffef8; intensity: 0.12; decay: 1.5; distance: 30"></a-entity>
+
+    <!-- Ambient sound -->
+    <a-sound src="#wind-ambient" autoplay="true" loop="true" volume="0.4" positional="false"></a-sound>
+
+    <!-- Static Hall Structure -->
+    <a-entity id="the-house"></a-entity>
+
+  </a-scene>
+
+  <script>
+    // ============================================================
+    // THE HOUSE - A Static, Designed Space
+    // 9 Main Halls connected by arched doorways
+    // Vestibules branching off each hall
+    // 52 Statues placed throughout
+    // ============================================================
+
+    // All 52 statues
+    const STATUES = [
+      { id: "faun", name: "The Faun", desc: "Comfort and reassurance - shush, be careful, be comforted. Piranesi's favourite of all the statues." },
+      { id: "gorilla", name: "A Gorilla", desc: "He sits with preternatural stillness, one great hand resting on his knee. Peace, tranquility, strength, endurance, and strong resolve." },
+      { id: "beehive_woman", name: "A Woman Carrying a Beehive", desc: "Industry and diligence - she holds the hive tenderly against her breast. Bees cluster on her arms and shoulders, but she does not fear them." },
+      { id: "broken_finger_medium", name: "A Broken Marble Finger", desc: "A fragment from a lost statue. Life-sized, with a jagged break at the base. What hand did it once belong to?" },
+      { id: "angel_rose_bush", name: "Angel Caught on Rose Bush", desc: "Intellect and grace contending with a thorny problem. Her wings are tangled in the thorns, yet her expression remains serene." },
+      { id: "boy_cymbals", name: "Young Boy Playing Cymbals", desc: "The pure joy of innocence. Dynamic composition frozen in marble." },
+      { id: "elephant_castle_medium", name: "Elephant Carrying a Castle", desc: "Protection and strength - the joy of status and security. An ornate fortress rises from the great beast's back." },
+      { id: "chess_kings", name: "Two Kings Playing Chess", desc: "The joy of intellectual challenge and learning. One reaches toward a piece that will never be moved." },
+      { id: "man_centaur", name: "Man Trampled by Centaur", desc: "Warning of downfall and pain, misfortune wrought by one's own hand. The man's expression shows rage or agony." },
+      { id: "gardener", name: "The Gardener", desc: "Hard work rewarded. Simple robes, honest labor, weathered marble." },
+      { id: "angel_trumpet_medium", name: "Angel Blowing Trumpet", desc: "A message, an announcement, revelation. The herald's call echoes through the endless halls." },
+      { id: "ship_waves", name: "The Ship on Waves", desc: "The crossing of space, time, or distance. Stylized carved waves carry the vessel eternally onward." },
+      { id: "man_book", name: "Man Reading Large Book", desc: "Writing and knowledge - perhaps Destiny himself. Hooded, mysterious, holding an enormous tome." },
+      { id: "woman_cloud_shield", name: "Woman with Cloud Shield", desc: "Something obscure, hidden, or unknown. The shield surface is decorated with carved clouds." },
+      { id: "child_flower", name: "Child Examining Flower", desc: "Innocence and wonder. The child is bowed forward, intently examining a single flower." },
+      { id: "grain_mice", name: "Sack of Grain Devoured by Mice", desc: "Diminish, erode, fade - the loss of something precious. The mice are numerous, the sack torn open." },
+      { id: "crowd_temple", name: "The Crowd in the Temple", desc: "Collective purpose, revolutionary energy. A young man holds a banner aloft in moonlight." },
+      { id: "minotaur_guard", name: "Minotaur - Standing Guard", desc: "Guardian of the vestibule - watchful, imposing. Bull head on muscular human body." },
+      { id: "minotaur_seated", name: "Minotaur - Seated", desc: "Guardian of the vestibule - contemplative despite fearsome form. Bull horns prominent." },
+      { id: "minotaur_walking", name: "Minotaur - Walking", desc: "Guardian of the vestibule - purposeful movement. One hoof-like foot forward." },
+      { id: "minotaur_raging", name: "Minotaur - Raging", desc: "Guardian of the vestibule - the most fearsome aspect. Muscles tensed, horns lowered." },
+      { id: "minotaur_mourning", name: "Minotaur - Mourning", desc: "Guardian of the vestibule - grief and contemplation. His great head bowed in sorrow." },
+      { id: "minotaur_pointing", name: "Minotaur - Pointing", desc: "Guardian of the vestibule - guide and sentinel. One arm extended, pointing the way." },
+      { id: "minotaur_burden", name: "Minotaur - Carrying Burden", desc: "Guardian of the vestibule - duty and endurance. Straining under weight, dutiful." },
+      { id: "minotaur_rest", name: "Minotaur - At Rest", desc: "Guardian of the vestibule - peace despite fearsome form. Perhaps sleeping." },
+      { id: "elephant_plain", name: "An Elephant", desc: "The noble animal, unadorned. Just the great beast in a standing pose, weathered marble." },
+      { id: "elderly_king", name: "Elderly King with Crown", desc: "Dignity reclaimed by nature - gulls have nested in his crown. Age and majesty intertwined." },
+      { id: "fox_teacher", name: "Fox Teaching Students", desc: "Wisdom passed down - kitsune-like knowledge shared with unlikely pupils. Squirrels and satyrs attend." },
+      { id: "star_mappers", name: "Man and Boy Mapping Stars", desc: "Astronomical study, the passing of knowledge between generations. They hold a star chart between them." },
+      { id: "gardener_roses", name: "Gardener Pruning Roses", desc: "Needful cutting back - reduction that allows stronger growth. More refined than the other gardener." },
+      { id: "shepherdess_lamb", name: "Shepherdess with Lamb", desc: "Gentle care, pastoral tenderness. She cradles the lamb in her arms." },
+      { id: "horned_giants", name: "Horned Giants Struggling from Wall", desc: "Endeavour and struggle against a wretched fate. Arms pushing outward, determination in every line." },
+      { id: "father_son_thorn", name: "Father Removing Thorn from Son's Foot", desc: "Aid and succour - tender protection. The father is careful, the boy trusting." },
+      { id: "old_man_ship", name: "Old Man Holding Model Ship", desc: "Memory of voyages, dreams of distant places. He cradles the miniature vessel." },
+      { id: "pegasus_colt", name: "Winged Horse with Colt", desc: "Parental protection, wonder passed to the next generation. The mother stands protectively." },
+      { id: "woman_coral_crown", name: "Woman Crowned with Coral", desc: "Ocean's beauty adorning humanity - hands blooming like stars or flowers." },
+      { id: "lion_coral_cage", name: "Lion in Cage of Coral", desc: "Strength contained by delicate beauty. The lion may be resigned or straining." },
+      { id: "man_coral_fire", name: "Man with Coral Aflame", desc: "Transformation or consumption - coral spreading like fire across his body." },
+      { id: "man_serpents", name: "Man Entwined with Serpents", desc: "Laocoon at peace - acceptance of fate. His expression calm despite the serpents." },
+      { id: "man_shattered_sword", name: "Man with Shattered Sword and Orb", desc: "The Tower - catastrophe studied. He examines the broken pieces with mystified intent." },
+      { id: "heretical_pope", name: "Fat Heretical Pope on Throne", desc: "Corruption pleased with itself - bulk overwhelming finery. Self-satisfied despite his heresy." },
+      { id: "queen_chariot", name: "Queen in Chariot", desc: "Beneficence despite martial appearance - goodness, gentleness, wisdom, protection." },
+      { id: "hermit_lantern", name: "Androgynous Figure with Lantern", desc: "The Hermit - seeking, illuminating the path forward. Face obscured by hood." },
+      { id: "good_king", name: "Good King with Walled City", desc: "Benevolent ruler, protector of civilization. A miniature city rests in his palm." },
+      { id: "children_flute", name: "Two Children Laughing with Flute", desc: "Pure happiness, companionship, simple pleasures of childhood." },
+      { id: "shellfish_figure", name: "Figure Covered in Mussels and Shellfish", desc: "Ocean's slow reclamation of art - dark shells against white marble." },
+      { id: "imana_turning", name: "Imana Turning Away", desc: "The Rwandan creator god departing from humanity. Sorrow in his glance over the shoulder." },
+      { id: "mbombo_creation", name: "Mbombo Vomiting Creation", desc: "The Kuba creator birthing the universe through cosmic sickness. Sun, moon, and animals emerge." },
+      { id: "ryangombe_buffalo", name: "Ryangombe and the Buffalo", desc: "The Rwandan hero at the moment of death and transformation. Transcendence rather than agony." },
+      { id: "kalumba_baskets", name: "The Kalumba Deceiver with Baskets", desc: "The Luba trickster with baskets of life and death. A sly, ambiguous smile." },
+      { id: "nyiragongo_keeper", name: "Nyiragongo's Keeper", desc: "Volcanic guardian spirit of the Congolese mountains. She holds back fire for those who honor her." },
+      { id: "child_tortoise", name: "A Child Riding a Tortoise", desc: "The child laughs silently, arms spread wide for balance. The tortoise plods eternally forward." }
+    ];
+
+    // Hall configuration
+    const HALL_WIDTH = 20;
+    const HALL_LENGTH = 36;
+    const HALL_HEIGHT = 18;
+    const ARCH_WIDTH = 6;
+    const ARCH_HEIGHT = 10;
+    const VESTIBULE_WIDTH = 12;
+    const VESTIBULE_DEPTH = 10;
+
+    // Hall names
+    const HALL_NAMES = [
+      "The Entrance Vestibule",
+      "The First Northern Hall",
+      "The Second Northern Hall",
+      "The Hall of the Minotaur",
+      "The Third Northern Hall",
+      "The Vestibule of Statues",
+      "The Fourth Northern Hall",
+      "The Drowned Gallery",
+      "The Final Hall"
+    ];
+
+    // Build the entire house
+    function buildHouse() {
+      const house = document.getElementById('the-house');
+      let statueIndex = 0;
+
+      // Create 9 halls in a line going north (negative Z)
+      for (let i = 0; i < 9; i++) {
+        const hallZ = -i * (HALL_LENGTH + 4); // 4m gap for arches
+        const hallName = HALL_NAMES[i];
+
+        // Create the main hall
+        const hall = createHall(i, hallZ, hallName);
+        house.appendChild(hall);
+
+        // Add statues to this hall (6 per hall, last hall gets remaining)
+        const statuesInThisHall = (i === 8) ? 4 : 6; // Last hall has 4 statues
+        for (let s = 0; s < statuesInThisHall && statueIndex < STATUES.length; s++) {
+          const statue = createStatue(STATUES[statueIndex], i, s, hallZ);
+          house.appendChild(statue);
+          statueIndex++;
+        }
+
+        // Create arch to next hall (except for last hall)
+        if (i < 8) {
+          const arch = createArch(hallZ - HALL_LENGTH/2 - 2, 'north');
+          house.appendChild(arch);
+        }
+
+        // Create vestibules on sides (alternating left/right, skip entrance)
+        if (i > 0) {
+          const vestibuleSide = (i % 2 === 0) ? 'west' : 'east';
+          const vestibule = createVestibule(i, hallZ, vestibuleSide);
+          house.appendChild(vestibule);
+        }
+      }
+
+      // Create entrance (south wall with door back to library)
+      const entrance = createEntrance();
+      house.appendChild(entrance);
+    }
+
+    // Create a single hall
+    function createHall(index, zCenter, name) {
+      const hall = document.createElement('a-entity');
+      hall.id = `hall-${index}`;
+      hall.dataset.name = name;
+
+      const halfW = HALL_WIDTH / 2;
+      const halfL = HALL_LENGTH / 2;
+
+      // Floor (matte stone)
+      const floor = document.createElement('a-plane');
+      floor.setAttribute('position', `0 0.01 ${zCenter}`);
+      floor.setAttribute('rotation', '-90 0 0');
+      floor.setAttribute('width', HALL_WIDTH);
+      floor.setAttribute('height', HALL_LENGTH);
+      floor.setAttribute('color', '#f5f2ee');
+      floor.setAttribute('material', 'roughness: 1; metalness: 0');
+      hall.appendChild(floor);
+
+      // Ceiling (matte stone)
+      const ceiling = document.createElement('a-plane');
+      ceiling.setAttribute('position', `0 ${HALL_HEIGHT} ${zCenter}`);
+      ceiling.setAttribute('rotation', '90 0 0');
+      ceiling.setAttribute('width', HALL_WIDTH);
+      ceiling.setAttribute('height', HALL_LENGTH);
+      ceiling.setAttribute('color', '#faf8f5');
+      ceiling.setAttribute('material', 'roughness: 1; metalness: 0');
+      hall.appendChild(ceiling);
+
+      // Ceiling fog layers (heavy mist obscuring ceiling)
+      for (let fogLayer = 0; fogLayer < 4; fogLayer++) {
+        const fogPlane = document.createElement('a-plane');
+        const fogY = HALL_HEIGHT - 2 - fogLayer * 1.5;
+        const fogOpacity = 0.25 - fogLayer * 0.05;
+        fogPlane.setAttribute('position', `0 ${fogY} ${zCenter}`);
+        fogPlane.setAttribute('rotation', '-90 0 0');
+        fogPlane.setAttribute('width', HALL_WIDTH + 2);
+        fogPlane.setAttribute('height', HALL_LENGTH + 2);
+        fogPlane.setAttribute('color', '#e8e4e0');
+        fogPlane.setAttribute('material', `opacity: ${fogOpacity}; transparent: true; side: double`);
+        hall.appendChild(fogPlane);
+      }
+
+      // West wall (with arch cutout for vestibule on odd halls)
+      const hasWestVestibule = (index > 0 && index % 2 === 0);
+      if (hasWestVestibule) {
+        // Wall sections around vestibule arch
+        createWallWithArch(hall, -halfW, zCenter, 'west');
+      } else {
+        const westWall = document.createElement('a-plane');
+        westWall.setAttribute('position', `${-halfW} ${HALL_HEIGHT/2} ${zCenter}`);
+        westWall.setAttribute('rotation', '0 90 0');
+        westWall.setAttribute('width', HALL_LENGTH);
+        westWall.setAttribute('height', HALL_HEIGHT);
+        westWall.setAttribute('color', '#f0ede8');
+        westWall.setAttribute('material', 'roughness: 1; metalness: 0');
+        hall.appendChild(westWall);
+      }
+
+      // East wall (with arch cutout for vestibule on even halls > 0)
+      const hasEastVestibule = (index > 0 && index % 2 === 1);
+      if (hasEastVestibule) {
+        createWallWithArch(hall, halfW, zCenter, 'east');
+      } else {
+        const eastWall = document.createElement('a-plane');
+        eastWall.setAttribute('position', `${halfW} ${HALL_HEIGHT/2} ${zCenter}`);
+        eastWall.setAttribute('rotation', '0 -90 0');
+        eastWall.setAttribute('width', HALL_LENGTH);
+        eastWall.setAttribute('height', HALL_HEIGHT);
+        eastWall.setAttribute('color', '#f0ede8');
+        eastWall.setAttribute('material', 'roughness: 1; metalness: 0');
+        hall.appendChild(eastWall);
+      }
+
+      // North wall (with arch except for last hall)
+      if (index < 8) {
+        createWallWithNorthArch(hall, zCenter - halfL);
+      } else {
+        const northWall = document.createElement('a-plane');
+        northWall.setAttribute('position', `0 ${HALL_HEIGHT/2} ${zCenter - halfL}`);
+        northWall.setAttribute('rotation', '0 0 0');
+        northWall.setAttribute('width', HALL_WIDTH);
+        northWall.setAttribute('height', HALL_HEIGHT);
+        northWall.setAttribute('color', '#f0ede8');
+        northWall.setAttribute('material', 'roughness: 1; metalness: 0');
+        hall.appendChild(northWall);
+      }
+
+      // South wall (with arch except for entrance hall)
+      if (index > 0) {
+        createWallWithNorthArch(hall, zCenter + halfL);
+      }
+
+      // Columns (embedded in walls as pilasters)
+      const colPositions = [
+        { x: -halfW + 0.25, z: zCenter - halfL/3 },
+        { x: halfW - 0.25, z: zCenter - halfL/3 },
+        { x: -halfW + 0.25, z: zCenter + halfL/3 },
+        { x: halfW - 0.25, z: zCenter + halfL/3 }
+      ];
+      colPositions.forEach((pos, ci) => {
+        const col = document.createElement('a-cylinder');
+        col.setAttribute('position', `${pos.x} ${HALL_HEIGHT/2} ${pos.z}`);
+        col.setAttribute('height', HALL_HEIGHT);
+        col.setAttribute('radius', 0.6);
+        col.setAttribute('color', '#f8f6f2');
+        col.setAttribute('material', 'roughness: 1; metalness: 0');
+        hall.appendChild(col);
+      });
+
+      // Overhead light (reduced 40%)
+      const light = document.createElement('a-light');
+      light.setAttribute('type', 'point');
+      light.setAttribute('color', '#fffef5');
+      light.setAttribute('intensity', '0.24');
+      light.setAttribute('position', `0 ${HALL_HEIGHT - 2} ${zCenter}`);
+      light.setAttribute('decay', '1');
+      light.setAttribute('distance', '50');
+      hall.appendChild(light);
+
+      return hall;
+    }
+
+    // Create wall sections with side arch for vestibule
+    function createWallWithArch(hall, x, zCenter, side) {
+      const halfL = HALL_LENGTH / 2;
+      const archHalfW = ARCH_WIDTH / 2;
+      const rotation = side === 'west' ? '0 90 0' : '0 -90 0';
+
+      // Wall section north of arch
+      const northSection = document.createElement('a-plane');
+      northSection.setAttribute('position', `${x} ${HALL_HEIGHT/2} ${zCenter - halfL/2 - archHalfW/2}`);
+      northSection.setAttribute('rotation', rotation);
+      northSection.setAttribute('width', halfL - archHalfW);
+      northSection.setAttribute('height', HALL_HEIGHT);
+      northSection.setAttribute('color', '#f0ede8');
+      northSection.setAttribute('material', 'roughness: 1; metalness: 0');
+      hall.appendChild(northSection);
+
+      // Wall section south of arch
+      const southSection = document.createElement('a-plane');
+      southSection.setAttribute('position', `${x} ${HALL_HEIGHT/2} ${zCenter + halfL/2 + archHalfW/2}`);
+      southSection.setAttribute('rotation', rotation);
+      southSection.setAttribute('width', halfL - archHalfW);
+      southSection.setAttribute('height', HALL_HEIGHT);
+      southSection.setAttribute('color', '#f0ede8');
+      southSection.setAttribute('material', 'roughness: 1; metalness: 0');
+      hall.appendChild(southSection);
+
+      // Wall section above arch
+      const topSection = document.createElement('a-plane');
+      topSection.setAttribute('position', `${x} ${HALL_HEIGHT - (HALL_HEIGHT - ARCH_HEIGHT)/2} ${zCenter}`);
+      topSection.setAttribute('rotation', rotation);
+      topSection.setAttribute('width', ARCH_WIDTH);
+      topSection.setAttribute('height', HALL_HEIGHT - ARCH_HEIGHT);
+      topSection.setAttribute('color', '#f0ede8');
+      topSection.setAttribute('material', 'roughness: 1; metalness: 0');
+      hall.appendChild(topSection);
+    }
+
+    // Create wall with north/south arch
+    function createWallWithNorthArch(hall, z) {
+      const halfW = HALL_WIDTH / 2;
+      const archHalfW = ARCH_WIDTH / 2;
+
+      // Left section
+      const leftSection = document.createElement('a-plane');
+      leftSection.setAttribute('position', `${-halfW/2 - archHalfW/2} ${HALL_HEIGHT/2} ${z}`);
+      leftSection.setAttribute('rotation', '0 0 0');
+      leftSection.setAttribute('width', halfW - archHalfW);
+      leftSection.setAttribute('height', HALL_HEIGHT);
+      leftSection.setAttribute('color', '#f0ede8');
+      leftSection.setAttribute('material', 'roughness: 1; metalness: 0');
+      hall.appendChild(leftSection);
+
+      // Right section
+      const rightSection = document.createElement('a-plane');
+      rightSection.setAttribute('position', `${halfW/2 + archHalfW/2} ${HALL_HEIGHT/2} ${z}`);
+      rightSection.setAttribute('rotation', '0 0 0');
+      rightSection.setAttribute('width', halfW - archHalfW);
+      rightSection.setAttribute('height', HALL_HEIGHT);
+      rightSection.setAttribute('color', '#f0ede8');
+      rightSection.setAttribute('material', 'roughness: 1; metalness: 0');
+      hall.appendChild(rightSection);
+
+      // Top section above arch
+      const topSection = document.createElement('a-plane');
+      topSection.setAttribute('position', `0 ${HALL_HEIGHT - (HALL_HEIGHT - ARCH_HEIGHT)/2} ${z}`);
+      topSection.setAttribute('rotation', '0 0 0');
+      topSection.setAttribute('width', ARCH_WIDTH);
+      topSection.setAttribute('height', HALL_HEIGHT - ARCH_HEIGHT);
+      topSection.setAttribute('color', '#f0ede8');
+      topSection.setAttribute('material', 'roughness: 1; metalness: 0');
+      hall.appendChild(topSection);
+    }
+
+    // Create decorative arch frame
+    function createArch(z, direction) {
+      const arch = document.createElement('a-entity');
+
+      // Arch pillars
+      const leftPillar = document.createElement('a-box');
+      leftPillar.setAttribute('position', `${-ARCH_WIDTH/2 - 0.3} ${ARCH_HEIGHT/2} ${z}`);
+      leftPillar.setAttribute('width', '0.6');
+      leftPillar.setAttribute('height', ARCH_HEIGHT);
+      leftPillar.setAttribute('depth', '1');
+      leftPillar.setAttribute('color', '#e8e4e0');
+      leftPillar.setAttribute('material', 'roughness: 1; metalness: 0');
+      arch.appendChild(leftPillar);
+
+      const rightPillar = document.createElement('a-box');
+      rightPillar.setAttribute('position', `${ARCH_WIDTH/2 + 0.3} ${ARCH_HEIGHT/2} ${z}`);
+      rightPillar.setAttribute('width', '0.6');
+      rightPillar.setAttribute('height', ARCH_HEIGHT);
+      rightPillar.setAttribute('depth', '1');
+      rightPillar.setAttribute('color', '#e8e4e0');
+      rightPillar.setAttribute('material', 'roughness: 1; metalness: 0');
+      arch.appendChild(rightPillar);
+
+      // Arch top (simplified as a box for now)
+      const archTop = document.createElement('a-box');
+      archTop.setAttribute('position', `0 ${ARCH_HEIGHT + 0.4} ${z}`);
+      archTop.setAttribute('width', ARCH_WIDTH + 1.2);
+      archTop.setAttribute('height', '0.8');
+      archTop.setAttribute('depth', '1');
+      archTop.setAttribute('color', '#e8e4e0');
+      archTop.setAttribute('material', 'roughness: 1; metalness: 0');
+      arch.appendChild(archTop);
+
+      return arch;
+    }
+
+    // Create a vestibule
+    function createVestibule(hallIndex, hallZ, side) {
+      const vestibule = document.createElement('a-entity');
+      const x = (side === 'west') ? -HALL_WIDTH/2 - VESTIBULE_DEPTH/2 : HALL_WIDTH/2 + VESTIBULE_DEPTH/2;
+
+      // Floor
+      const floor = document.createElement('a-plane');
+      floor.setAttribute('position', `${x} 0.01 ${hallZ}`);
+      floor.setAttribute('rotation', '-90 0 0');
+      floor.setAttribute('width', VESTIBULE_DEPTH);
+      floor.setAttribute('height', VESTIBULE_WIDTH);
+      floor.setAttribute('color', '#f2efeb');
+      floor.setAttribute('material', 'roughness: 1; metalness: 0');
+      vestibule.appendChild(floor);
+
+      // Ceiling
+      const ceiling = document.createElement('a-plane');
+      ceiling.setAttribute('position', `${x} ${HALL_HEIGHT - 2} ${hallZ}`);
+      ceiling.setAttribute('rotation', '90 0 0');
+      ceiling.setAttribute('width', VESTIBULE_DEPTH);
+      ceiling.setAttribute('height', VESTIBULE_WIDTH);
+      ceiling.setAttribute('color', '#f8f6f2');
+      ceiling.setAttribute('material', 'roughness: 1; metalness: 0');
+      vestibule.appendChild(ceiling);
+
+      // Back wall
+      const backX = (side === 'west') ? x - VESTIBULE_DEPTH/2 : x + VESTIBULE_DEPTH/2;
+      const backWall = document.createElement('a-plane');
+      backWall.setAttribute('position', `${backX} ${(HALL_HEIGHT-2)/2} ${hallZ}`);
+      backWall.setAttribute('rotation', side === 'west' ? '0 90 0' : '0 -90 0');
+      backWall.setAttribute('width', VESTIBULE_WIDTH);
+      backWall.setAttribute('height', HALL_HEIGHT - 2);
+      backWall.setAttribute('color', '#ebe8e4');
+      backWall.setAttribute('material', 'roughness: 1; metalness: 0');
+      vestibule.appendChild(backWall);
+
+      // Side walls
+      const northWall = document.createElement('a-plane');
+      northWall.setAttribute('position', `${x} ${(HALL_HEIGHT-2)/2} ${hallZ - VESTIBULE_WIDTH/2}`);
+      northWall.setAttribute('rotation', '0 0 0');
+      northWall.setAttribute('width', VESTIBULE_DEPTH);
+      northWall.setAttribute('height', HALL_HEIGHT - 2);
+      northWall.setAttribute('color', '#ebe8e4');
+      northWall.setAttribute('material', 'roughness: 1; metalness: 0');
+      vestibule.appendChild(northWall);
+
+      const southWall = document.createElement('a-plane');
+      southWall.setAttribute('position', `${x} ${(HALL_HEIGHT-2)/2} ${hallZ + VESTIBULE_WIDTH/2}`);
+      southWall.setAttribute('rotation', '0 180 0');
+      southWall.setAttribute('width', VESTIBULE_DEPTH);
+      southWall.setAttribute('height', HALL_HEIGHT - 2);
+      southWall.setAttribute('color', '#ebe8e4');
+      southWall.setAttribute('material', 'roughness: 1; metalness: 0');
+      vestibule.appendChild(southWall);
+
+      // Light (reduced 40%)
+      const light = document.createElement('a-light');
+      light.setAttribute('type', 'point');
+      light.setAttribute('color', '#fffef5');
+      light.setAttribute('intensity', '0.15');
+      light.setAttribute('position', `${x} ${HALL_HEIGHT - 4} ${hallZ}`);
+      light.setAttribute('decay', '1.5');
+      light.setAttribute('distance', '20');
+      vestibule.appendChild(light);
+
+      // Ceiling fog in vestibule
+      for (let fogLayer = 0; fogLayer < 3; fogLayer++) {
+        const fogPlane = document.createElement('a-plane');
+        const fogY = HALL_HEIGHT - 4 - fogLayer * 1.5;
+        const fogOpacity = 0.2 - fogLayer * 0.05;
+        fogPlane.setAttribute('position', `${x} ${fogY} ${hallZ}`);
+        fogPlane.setAttribute('rotation', '-90 0 0');
+        fogPlane.setAttribute('width', VESTIBULE_DEPTH + 2);
+        fogPlane.setAttribute('height', VESTIBULE_WIDTH + 2);
+        fogPlane.setAttribute('color', '#e8e4e0');
+        fogPlane.setAttribute('material', `opacity: ${fogOpacity}; transparent: true; side: double`);
+        vestibule.appendChild(fogPlane);
+      }
+
+      return vestibule;
+    }
+
+    // Create entrance area with door back to library
+    function createEntrance() {
+      const entrance = document.createElement('a-entity');
+      const z = HALL_LENGTH / 2;
+
+      // South wall with doorway
+      const leftWall = document.createElement('a-plane');
+      leftWall.setAttribute('position', `${-HALL_WIDTH/4 - 1} ${HALL_HEIGHT/2} ${z}`);
+      leftWall.setAttribute('rotation', '0 180 0');
+      leftWall.setAttribute('width', HALL_WIDTH/2 - 2);
+      leftWall.setAttribute('height', HALL_HEIGHT);
+      leftWall.setAttribute('color', '#f0ede8');
+      leftWall.setAttribute('material', 'roughness: 1; metalness: 0');
+      entrance.appendChild(leftWall);
+
+      const rightWall = document.createElement('a-plane');
+      rightWall.setAttribute('position', `${HALL_WIDTH/4 + 1} ${HALL_HEIGHT/2} ${z}`);
+      rightWall.setAttribute('rotation', '0 180 0');
+      rightWall.setAttribute('width', HALL_WIDTH/2 - 2);
+      rightWall.setAttribute('height', HALL_HEIGHT);
+      rightWall.setAttribute('color', '#f0ede8');
+      rightWall.setAttribute('material', 'roughness: 1; metalness: 0');
+      entrance.appendChild(rightWall);
+
+      const topWall = document.createElement('a-plane');
+      topWall.setAttribute('position', `0 ${HALL_HEIGHT - 3} ${z}`);
+      topWall.setAttribute('rotation', '0 180 0');
+      topWall.setAttribute('width', 4);
+      topWall.setAttribute('height', 6);
+      topWall.setAttribute('color', '#f0ede8');
+      topWall.setAttribute('material', 'roughness: 1; metalness: 0');
+      entrance.appendChild(topWall);
+
+      // Door frame
+      const leftFrame = document.createElement('a-box');
+      leftFrame.setAttribute('position', `-2.1 ${ARCH_HEIGHT/2} ${z}`);
+      leftFrame.setAttribute('width', '0.2');
+      leftFrame.setAttribute('height', ARCH_HEIGHT);
+      leftFrame.setAttribute('depth', '0.4');
+      leftFrame.setAttribute('color', '#e0dcd8');
+      leftFrame.setAttribute('material', 'roughness: 1; metalness: 0');
+      entrance.appendChild(leftFrame);
+
+      const rightFrame = document.createElement('a-box');
+      rightFrame.setAttribute('position', `2.1 ${ARCH_HEIGHT/2} ${z}`);
+      rightFrame.setAttribute('width', '0.2');
+      rightFrame.setAttribute('height', ARCH_HEIGHT);
+      rightFrame.setAttribute('depth', '0.4');
+      rightFrame.setAttribute('color', '#e0dcd8');
+      rightFrame.setAttribute('material', 'roughness: 1; metalness: 0');
+      entrance.appendChild(rightFrame);
+
+      const topFrame = document.createElement('a-box');
+      topFrame.setAttribute('position', `0 ${ARCH_HEIGHT + 0.2} ${z}`);
+      topFrame.setAttribute('width', '4.4');
+      topFrame.setAttribute('height', '0.4');
+      topFrame.setAttribute('depth', '0.4');
+      topFrame.setAttribute('color', '#e0dcd8');
+      topFrame.setAttribute('material', 'roughness: 1; metalness: 0');
+      entrance.appendChild(topFrame);
+
+      // Door (clickable)
+      const door = document.createElement('a-box');
+      door.classList.add('door-back');
+      door.id = 'door-to-library';
+      door.setAttribute('position', `0 ${ARCH_HEIGHT/2} ${z + 0.2}`);
+      door.setAttribute('width', '4');
+      door.setAttribute('height', ARCH_HEIGHT);
+      door.setAttribute('depth', '0.1');
+      door.setAttribute('color', '#2a2520');
+      door.setAttribute('material', 'opacity: 0.9');
+      entrance.appendChild(door);
+
+      // Door label
+      const label = document.createElement('a-text');
+      label.setAttribute('value', 'Return to the Library');
+      label.setAttribute('position', `0 ${ARCH_HEIGHT/2 + 2} ${z + 0.3}`);
+      label.setAttribute('rotation', '0 180 0');
+      label.setAttribute('align', 'center');
+      label.setAttribute('color', '#a09080');
+      label.setAttribute('width', '4');
+      entrance.appendChild(label);
+
+      return entrance;
+    }
+
+    // Create a statue
+    function createStatue(data, hallIndex, posIndex, hallZ) {
+      const statue = document.createElement('a-entity');
+      statue.classList.add('statue');
+      statue.id = `statue-${data.id}`;
+
+      // Position: 3 on each side, staggered along the hall
+      const isWest = posIndex < 3;
+      const rowIndex = isWest ? posIndex : posIndex - 3;
+      const x = isWest ? -6 : 6;
+      const zOffset = (rowIndex - 1) * 10; // -10, 0, +10 from center
+      const z = hallZ + zOffset;
+      const rotY = isWest ? 90 : -90;
+
+      statue.setAttribute('position', `${x} 0.1 ${z}`);
+      statue.setAttribute('rotation', `0 ${rotY} 0`);
+      statue.dataset.name = data.name;
+      statue.dataset.description = data.desc;
+
+      // Trigger box
+      const trigger = document.createElement('a-box');
+      trigger.classList.add('trigger');
+      trigger.setAttribute('position', '0 3 0');
+      trigger.setAttribute('width', '4');
+      trigger.setAttribute('height', '6');
+      trigger.setAttribute('depth', '4');
+      trigger.setAttribute('visible', 'false');
+      statue.appendChild(trigger);
+
+      // Model
+      const model = document.createElement('a-entity');
+      model.setAttribute('gltf-model', `#model-${data.id}`);
+      model.setAttribute('scale', '3 3 3');
+      statue.appendChild(model);
+
+      // Pedestal
+      const pedestal = document.createElement('a-box');
+      pedestal.setAttribute('position', '0 -0.25 0');
+      pedestal.setAttribute('width', '2');
+      pedestal.setAttribute('height', '0.5');
+      pedestal.setAttribute('depth', '2');
+      pedestal.setAttribute('color', '#e8e4e0');
+      pedestal.setAttribute('material', 'roughness: 1; metalness: 0');
+      statue.appendChild(pedestal);
+
+      // Interaction
+      trigger.addEventListener('mouseenter', () => {
+        document.getElementById('journal').innerHTML = `<strong>${data.name}</strong><br><br>${data.desc}`;
+        document.getElementById('journal').classList.add('visible');
+      });
+      trigger.addEventListener('mouseleave', () => {
+        document.getElementById('journal').classList.remove('visible');
+      });
+
+      return statue;
+    }
+
+    // Update location display based on player position
+    function updateLocation() {
+      const rig = document.getElementById('rig');
+      const pos = rig.getAttribute('position');
+      const playerLight = document.getElementById('player-light');
+
+      // Update player light
+      playerLight.setAttribute('position', `${pos.x} ${pos.y + 3} ${pos.z}`);
+
+      // Determine which hall the player is in
+      const hallIndex = Math.max(0, Math.min(8, Math.floor((-pos.z + HALL_LENGTH/2) / (HALL_LENGTH + 4))));
+      document.getElementById('location').textContent = HALL_NAMES[hallIndex] || 'The House';
+    }
+
+    // Setup door interaction
+    function setupDoor() {
+      const door = document.getElementById('door-to-library');
+      if (door) {
+        door.addEventListener('click', () => {
+          window.location.href = 'index.html';
+        });
+        door.addEventListener('mouseenter', () => {
+          door.setAttribute('color', '#3a3540');
+        });
+        door.addEventListener('mouseleave', () => {
+          door.setAttribute('color', '#2a2520');
+        });
+      }
+    }
+
+    // Initialize
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      buildHouse();
+      setupDoor();
+      setInterval(updateLocation, 200);
+    });
+  </script>
+</body>
+</html>

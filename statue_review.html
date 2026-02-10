@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Statue Review Room</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #info {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: rgba(200, 200, 220, 0.9);
+      font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+      font-size: 14px;
+      z-index: 1000;
+      background: rgba(20, 20, 30, 0.8);
+      padding: 15px 20px;
+      border-radius: 4px;
+      max-width: 300px;
+    }
+    #info h3 { margin: 0 0 10px 0; }
+    #info p { margin: 5px 0; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="info">
+    <h3>Statue Review Room</h3>
+    <p>Compare detail levels: LOW | MEDIUM | HIGH</p>
+    <p>Row 1: Broken Finger</p>
+    <p>Row 2: Angel with Trumpet</p>
+    <p>Row 3: Elephant with Castle</p>
+  </div>
+
+  <a-scene fog="type: exponential; color: #1a1a2a; density: 0.008" background="color: #0a0a15">
+
+    <!-- Assets -->
+    <a-assets>
+      <!-- Broken Finger -->
+      <a-asset-item id="finger-low" src="models/broken_finger_low.gltf"></a-asset-item>
+      <a-asset-item id="finger-medium" src="models/broken_finger_medium.gltf"></a-asset-item>
+      <a-asset-item id="finger-high" src="models/broken_finger_high.gltf"></a-asset-item>
+      <!-- Angel Trumpet -->
+      <a-asset-item id="angel-low" src="models/angel_trumpet_low.gltf"></a-asset-item>
+      <a-asset-item id="angel-medium" src="models/angel_trumpet_medium.gltf"></a-asset-item>
+      <a-asset-item id="angel-high" src="models/angel_trumpet_high.gltf"></a-asset-item>
+      <!-- Elephant Castle -->
+      <a-asset-item id="elephant-low" src="models/elephant_castle_low.gltf"></a-asset-item>
+      <a-asset-item id="elephant-medium" src="models/elephant_castle_medium.gltf"></a-asset-item>
+      <a-asset-item id="elephant-high" src="models/elephant_castle_high.gltf"></a-asset-item>
+    </a-assets>
+
+    <!-- Player -->
+    <a-entity id="rig" position="0 0 12">
+      <a-entity
+        id="camera"
+        camera
+        look-controls="pointerLockEnabled: true"
+        wasd-controls="acceleration: 30"
+        position="0 1.6 0">
+      </a-entity>
+    </a-entity>
+
+    <!-- Lighting -->
+    <a-light type="ambient" color="#8888aa" intensity="0.4"></a-light>
+    <a-light type="directional" color="#ffffff" intensity="0.6" position="5 10 5"></a-light>
+    <a-light type="point" color="#aabbdd" intensity="0.8" position="0 8 0" decay="1" distance="50"></a-light>
+
+    <!-- Floor -->
+    <a-plane position="0 0 0" rotation="-90 0 0" width="40" height="30" color="#2a2a3a" material="roughness: 0.8"></a-plane>
+
+    <!-- Column Headers -->
+    <a-text value="LOW" position="-6 4 -8" align="center" color="#888899" width="6"></a-text>
+    <a-text value="MEDIUM" position="0 4 -8" align="center" color="#888899" width="6"></a-text>
+    <a-text value="HIGH" position="6 4 -8" align="center" color="#888899" width="6"></a-text>
+
+    <!-- ROW 1: Broken Finger -->
+    <a-text value="Broken Finger" position="-12 1.5 -2" align="right" color="#aaaacc" width="4"></a-text>
+
+    <a-entity position="-6 0 -2">
+      <a-box position="0 0.15 0" width="2" height="0.3" depth="2" color="#3a3a4a"></a-box>
+      <a-entity gltf-model="#finger-low" position="0 0.3 0" scale="1 1 1"></a-entity>
+      <a-text value="3 meshes\n11 KB" position="0 -0.3 1.2" align="center" color="#666677" width="2"></a-text>
+    </a-entity>
+
+    <a-entity position="0 0 -2">
+      <a-box position="0 0.15 0" width="2" height="0.3" depth="2" color="#3a3a4a"></a-box>
+      <a-entity gltf-model="#finger-medium" position="0 0.3 0" scale="1 1 1"></a-entity>
+      <a-text value="12 meshes\n57 KB" position="0 -0.3 1.2" align="center" color="#666677" width="2"></a-text>
+    </a-entity>
+
+    <a-entity position="6 0 -2">
+      <a-box position="0 0.15 0" width="2" height="0.3" depth="2" color="#3a3a4a"></a-box>
+      <a-entity gltf-model="#finger-high" position="0 0.3 0" scale="1 1 1"></a-entity>
+      <a-text value="33 meshes\n155 KB" position="0 -0.3 1.2" align="center" color="#666677" width="2"></a-text>
+    </a-entity>
+
+    <!-- ROW 2: Angel Trumpet -->
+    <a-text value="Angel Trumpet" position="-12 1.5 -6" align="right" color="#aaaacc" width="4"></a-text>
+
+    <a-entity position="-6 0 -6">
+      <a-box position="0 0.15 0" width="2.5" height="0.3" depth="2.5" color="#3a3a4a"></a-box>
+      <a-entity gltf-model="#angel-low" position="0 0.3 0" scale="1 1 1"></a-entity>
+      <a-text value="6 meshes\n19 KB" position="0 -0.3 1.5" align="center" color="#666677" width="2"></a-text>
+    </a-entity>
+
+    <a-entity position="0 0 -6">
+      <a-box position="0 0.15 0" width="2.5" height="0.3" depth="2.5" color="#3a3a4a"></a-box>
+      <a-entity gltf-model="#angel-medium" position="0 0.3 0" scale="1 1 1"></a-entity>
+      <a-text value="21 meshes\n102 KB" position="0 -0.3 1.5" align="center" color="#666677" width="2"></a-text>
+    </a-entity>
+
+    <a-entity position="6 0 -6">
+      <a-box position="0 0.15 0" width="2.5" height="0.3" depth="2.5" color="#3a3a4a"></a-box>
+      <a-entity gltf-model="#angel-high" position="0 0.3 0" scale="1 1 1"></a-entity>
+      <a-text value="61 meshes\n296 KB" position="0 -0.3 1.5" align="center" color="#666677" width="2"></a-text>
+    </a-entity>
+
+    <!-- ROW 3: Elephant Castle -->
+    <a-text value="Elephant Castle" position="-12 1.5 -10" align="right" color="#aaaacc" width="4"></a-text>
+
+    <a-entity position="-6 0 -10">
+      <a-box position="0 0.15 0" width="3" height="0.3" depth="3" color="#3a3a4a"></a-box>
+      <a-entity gltf-model="#elephant-low" position="0 0.3 0" scale="1 1 1"></a-entity>
+      <a-text value="9 meshes\n33 KB" position="0 -0.3 1.8" align="center" color="#666677" width="2"></a-text>
+    </a-entity>
+
+    <a-entity position="0 0 -10">
+      <a-box position="0 0.15 0" width="3" height="0.3" depth="3" color="#3a3a4a"></a-box>
+      <a-entity gltf-model="#elephant-medium" position="0 0.3 0" scale="1 1 1"></a-entity>
+      <a-text value="27 meshes\n149 KB" position="0 -0.3 1.8" align="center" color="#666677" width="2"></a-text>
+    </a-entity>
+
+    <a-entity position="6 0 -10">
+      <a-box position="0 0.15 0" width="3" height="0.3" depth="3" color="#3a3a4a"></a-box>
+      <a-entity gltf-model="#elephant-high" position="0 0.3 0" scale="1 1 1"></a-entity>
+      <a-text value="92 meshes\n473 KB" position="0 -0.3 1.8" align="center" color="#666677" width="2"></a-text>
+    </a-entity>
+
+    <!-- Back wall -->
+    <a-plane position="0 5 -14" width="40" height="10" color="#1a1a2a"></a-plane>
+
+  </a-scene>
+</body>
+</html>

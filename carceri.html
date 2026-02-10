@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>The Carceri - Imaginary Prisons</title>
+  <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-extras@4.1.2/dist/aframe-extras.min.js"></script>
+  <script src="https://unpkg.com/aframe-physics-system@3.1.2/dist/aframe-physics-system.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+
+    #location {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: rgba(180, 160, 140, 0.9);
+      font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+      font-size: 16px;
+      font-style: italic;
+      z-index: 1000;
+      text-shadow: 0 0 10px rgba(0,0,0,0.8);
+      background: rgba(10, 10, 15, 0.6);
+      padding: 10px 15px;
+      border-radius: 3px;
+    }
+
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      color: rgba(140, 130, 120, 0.8);
+      font-family: -apple-system, sans-serif;
+      font-size: 12px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="location">The First Carcere</div>
+  <div id="controls">WASD to move | SPACE to jump | Look with mouse</div>
+
+  <a-scene physics="debug: false; gravity: -12" fog="type: exponential; color: #1a1815; density: 0.012" background="color: #0a0908">
+
+    <!-- Assets -->
+    <a-assets>
+      <audio id="ambient-drip" src="audio/wind1.mp3" preload="auto"></audio>
+
+      <!-- Reusable materials -->
+      <a-mixin id="stone-dark" material="color: #3a3530; roughness: 0.9; metalness: 0"></a-mixin>
+      <a-mixin id="stone-medium" material="color: #4a4540; roughness: 0.85; metalness: 0"></a-mixin>
+      <a-mixin id="stone-light" material="color: #5a5550; roughness: 0.8; metalness: 0"></a-mixin>
+      <a-mixin id="iron" material="color: #2a2825; roughness: 0.6; metalness: 0.7"></a-mixin>
+      <a-mixin id="wood" material="color: #3a2a1a; roughness: 0.8; metalness: 0"></a-mixin>
+      <a-mixin id="rope" material="color: #6a5a4a; roughness: 0.95; metalness: 0"></a-mixin>
+    </a-assets>
+
+    <!-- Player with physics -->
+    <a-entity id="rig" position="0 1 35" movement-controls="speed: 0.12" kinematic-body jump-ability>
+      <a-entity id="camera" camera look-controls="pointerLockEnabled: true" position="0 1.6 0"
+                raycaster="objects: .interactive; far: 5" cursor="rayOrigin: mouse">
+      </a-entity>
+      <!-- Player lantern -->
+      <a-light type="point" color="#ffeecc" intensity="0.3" distance="12" decay="2" position="0.3 1.2 -0.5"></a-light>
+    </a-entity>
+
+    <!-- Main structure container -->
+    <a-entity id="carceri"></a-entity>
+
+    <!-- Ambient sound -->
+    <a-sound src="#ambient-drip" autoplay="true" loop="true" volume="0.2" positional="false"></a-sound>
+
+  </a-scene>
+
+  <script>
+    // ============ CONFIGURATION ============
+    const CONFIG = {
+      // Main chamber dimensions
+      width: 60,           // X axis
+      depth: 80,           // Z axis
+      height: 50,          // Y axis - towering verticality
+
+      // Tier heights
+      tier1: 0,            // Ground level
+      tier2: 12,           // First platform level
+      tier3: 24,           // Second platform level
+      tier4: 36,           // Third platform level
+
+      // Colors - sepia/charcoal palette
+      stoneVeryDark: '#2a2520',
+      stoneDark: '#3a3530',
+      stoneMedium: '#4a4540',
+      stoneLight: '#5a5550',
+      stoneHighlight: '#6a6560',
+      iron: '#252320',
+      ironRust: '#4a3a2a',
+      wood: '#3a2a1a',
+      woodDark: '#2a1a0a',
+      rope: '#6a5a4a'
+    };
+
+    const C = CONFIG;
+    const halfW = C.width / 2;
+    const halfD = C.depth / 2;
+
+    // ============ BUILD FUNCTIONS ============
+
+    function buildCarceri() {
+      const container = document.getElementById('carceri');
+      let html = '';
+
+      // === MAIN ENCLOSURE ===
+      html += buildMainStructure();
+
+      // === PRIMARY ARCH (Foreground) ===
+      html += buildPrimaryArch();
+
+      // === SECONDARY ARCHES (Background forest of stone) ===
+      html += buildSecondaryArches();
+
+      // === PLATFORMS AND BALCONIES ===
+      html += buildPlatforms();
+
+      // === STAIRCASES ===
+      html += buildStaircases();
+
+      // === CATWALKS AND BRIDGES ===
+      html += buildCatwalks();
+
+      // === COLUMNS AND PIERS ===
+      html += buildPiers();
+
+      // === ARCHED WINDOWS AND OCULI ===
+      html += buildFenestration();
+
+      // === CHAINS AND ROPES ===
+      html += buildChains();
+
+      // === PULLEYS AND MACHINERY ===
+      html += buildPulleys();
+
+      // === LANTERNS ===
+      html += buildLanterns();
+
+      // === IRON RINGS AND DETAILS ===
+      html += buildIronDetails();
+
+      // === LIGHTING (Chiaroscuro) ===
+      html += buildLighting();
+
+      // === EXIT DOOR ===
+      html += buildExitDoor();
+
+      container.innerHTML = html;
+
+      // Setup interactions
+      setTimeout(setupInteractions, 500);
+
+      console.log('=== CARCERI LOADED ===');
+    }
+
+    // ============ MAIN STRUCTURE ============
+    function buildMainStructure() {
+      let html = '';
+
+      // FLOOR - massive flagstones
+      html += `<a-box static-body position="0 -0.5 0" width="${C.width}" height="1" depth="${C.depth}" color="${C.stoneDark}"></a-box>`;
+
+      // Floor detail - cracks and joints (decorative lines)
+      for (let x = -halfW + 5; x < halfW; x += 8) {
+        html += `<a-box position="${x} 0.01 0" width="0.05" height="0.02" depth="${C.depth - 2}" color="${C.stoneVeryDark}"></a-box>`;
+      }
+      for (let z = -halfD + 5; z < halfD; z += 8) {
+        html += `<a-box position="0 0.01 ${z}" width="${C.width - 2}" height="0.02" depth="0.05" color="${C.stoneVeryDark}"></a-box>`;
+      }
+
+      // CEILING - vaulted, with massive beams
+      html += `<a-box static-body position="0 ${C.height} 0" width="${C.width}" height="1" depth="${C.depth}" color="${C.stoneVeryDark}"></a-box>`;
+
+      // Ceiling beams
+      for (let x = -halfW + 10; x < halfW; x += 15) {
+        html += `<a-box position="${x} ${C.height - 1} 0" width="2" height="2" depth="${C.depth}" color="${C.stoneDark}"></a-box>`;
+      }
+
+      // WALLS
+      // Back wall (+Z) - entrance side with massive arch
+      html += `<a-box static-body position="0 ${C.height/2} ${halfD}" width="${C.width}" height="${C.height}" depth="2" color="${C.stoneDark}"></a-box>`;
+
+      // Front wall (-Z) - deep shadows
+      html += `<a-box static-body position="0 ${C.height/2} ${-halfD}" width="${C.width}" height="${C.height}" depth="2" color="${C.stoneVeryDark}"></a-box>`;
+
+      // Left wall (-X)
+      html += `<a-box static-body position="${-halfW} ${C.height/2} 0" width="2" height="${C.height}" depth="${C.depth}" color="${C.stoneDark}"></a-box>`;
+
+      // Right wall (+X)
+      html += `<a-box static-body position="${halfW} ${C.height/2} 0" width="2" height="${C.height}" depth="${C.depth}" color="${C.stoneDark}"></a-box>`;
+
+      return html;
+    }
+
+    // ============ PRIMARY ARCH ============
+    function buildPrimaryArch() {
+      let html = '';
+
+      // Massive barrel vault in the foreground
+      const archX = 0;
+      const archZ = 15;
+      const archWidth = 20;
+      const archHeight = 18;
+      const archDepth = 8;
+
+      // Arch piers (massive stone pillars)
+      html += `<a-box static-body position="${-archWidth/2 - 2} ${archHeight/2} ${archZ}" width="4" height="${archHeight}" depth="${archDepth}" color="${C.stoneMedium}"></a-box>`;
+      html += `<a-box static-body position="${archWidth/2 + 2} ${archHeight/2} ${archZ}" width="4" height="${archHeight}" depth="${archDepth}" color="${C.stoneMedium}"></a-box>`;
+
+      // Arch voussoirs (wedge stones) - approximated with boxes
+      const numVoussoirs = 12;
+      for (let i = 0; i <= numVoussoirs; i++) {
+        const angle = (Math.PI * i) / numVoussoirs;
+        const x = Math.cos(angle) * (archWidth / 2);
+        const y = archHeight + Math.sin(angle) * 4;
+        const rot = (90 - (i * 180 / numVoussoirs));
+        html += `<a-box position="${x} ${y} ${archZ}" rotation="0 0 ${rot}" width="1.5" height="2" depth="${archDepth + 0.5}" color="${C.stoneMedium}"></a-box>`;
+      }
+
+      // Keystone - emphasized
+      html += `<a-box position="0 ${archHeight + 4} ${archZ}" width="2.5" height="3" depth="${archDepth + 1}" color="${C.stoneLight}"></a-box>`;
+
+      // Masonry joint lines on piers
+      for (let y = 2; y < archHeight; y += 2) {
+        html += `<a-box position="${-archWidth/2 - 2} ${y} ${archZ + archDepth/2 + 0.01}" width="4.1" height="0.05" depth="0.02" color="${C.stoneVeryDark}"></a-box>`;
+        html += `<a-box position="${archWidth/2 + 2} ${y} ${archZ + archDepth/2 + 0.01}" width="4.1" height="0.05" depth="0.02" color="${C.stoneVeryDark}"></a-box>`;
+      }
+
+      return html;
+    }
+
+    // ============ SECONDARY ARCHES ============
+    function buildSecondaryArches() {
+      let html = '';
+
+      // Background arches at 45 and 90 degree angles
+      const archPositions = [
+        { x: -18, z: -10, rot: 45, scale: 0.7 },
+        { x: 18, z: -10, rot: -45, scale: 0.7 },
+        { x: -20, z: -25, rot: 0, scale: 0.6 },
+        { x: 20, z: -25, rot: 0, scale: 0.6 },
+        { x: 0, z: -30, rot: 0, scale: 0.8 },
+        { x: -15, z: 0, rot: 90, scale: 0.5 },
+        { x: 15, z: 0, rot: 90, scale: 0.5 },
+      ];
+
+      archPositions.forEach((arch, idx) => {
+        const h = 15 * arch.scale;
+        const w = 12 * arch.scale;
+
+        // Simplified arch structure
+        html += `<a-box position="${arch.x - w/2 - 1} ${h/2 + C.tier2} ${arch.z}" rotation="0 ${arch.rot} 0" width="2" height="${h}" depth="3" color="${C.stoneDark}"></a-box>`;
+        html += `<a-box position="${arch.x + w/2 + 1} ${h/2 + C.tier2} ${arch.z}" rotation="0 ${arch.rot} 0" width="2" height="${h}" depth="3" color="${C.stoneDark}"></a-box>`;
+
+        // Arch top
+        for (let i = 0; i <= 6; i++) {
+          const angle = (Math.PI * i) / 6;
+          const ax = arch.x + Math.cos(angle) * (w / 2);
+          const ay = C.tier2 + h + Math.sin(angle) * 2 * arch.scale;
+          html += `<a-box position="${ax} ${ay} ${arch.z}" rotation="0 ${arch.rot} ${90 - i * 30}" width="1" height="1.5" depth="3" color="${C.stoneDark}"></a-box>`;
+        }
+      });
+
+      return html;
+    }
+
+    // ============ PLATFORMS AND BALCONIES ============
+    function buildPlatforms() {
+      let html = '';
+
+      // TIER 2 - First elevated platform (wraps around)
+      const t2 = C.tier2;
+      const platDepth = 4;
+      const platThick = 0.5;
+
+      // Left platform
+      html += `<a-box static-body position="${-halfW + platDepth/2 + 1} ${t2} 0" width="${platDepth}" height="${platThick}" depth="${C.depth - 10}" color="${C.stoneMedium}"></a-box>`;
+
+      // Right platform
+      html += `<a-box static-body position="${halfW - platDepth/2 - 1} ${t2} 0" width="${platDepth}" height="${platThick}" depth="${C.depth - 10}" color="${C.stoneMedium}"></a-box>`;
+
+      // Back platform
+      html += `<a-box static-body position="0 ${t2} ${halfD - platDepth/2 - 1}" width="${C.width - 10}" height="${platThick}" depth="${platDepth}" color="${C.stoneMedium}"></a-box>`;
+
+      // Front platform
+      html += `<a-box static-body position="0 ${t2} ${-halfD + platDepth/2 + 1}" width="${C.width - 10}" height="${platThick}" depth="${platDepth}" color="${C.stoneMedium}"></a-box>`;
+
+      // Corbels (stepped stone brackets) supporting platforms
+      const corbelPositions = [
+        { x: -halfW + 1.5, z: -20 }, { x: -halfW + 1.5, z: 0 }, { x: -halfW + 1.5, z: 20 },
+        { x: halfW - 1.5, z: -20 }, { x: halfW - 1.5, z: 0 }, { x: halfW - 1.5, z: 20 },
+      ];
+
+      corbelPositions.forEach(pos => {
+        // Three-step corbel
+        html += `<a-box position="${pos.x} ${t2 - 1} ${pos.z}" width="1" height="0.8" depth="1.5" color="${C.stoneLight}"></a-box>`;
+        html += `<a-box position="${pos.x + (pos.x < 0 ? 0.3 : -0.3)} ${t2 - 1.7} ${pos.z}" width="0.6" height="0.6" depth="1.2" color="${C.stoneLight}"></a-box>`;
+        html += `<a-box position="${pos.x + (pos.x < 0 ? 0.5 : -0.5)} ${t2 - 2.2} ${pos.z}" width="0.4" height="0.4" depth="1" color="${C.stoneLight}"></a-box>`;
+      });
+
+      // Railings on platforms
+      const railH = 1.1;
+      // Left railing
+      html += `<a-box static-body position="${-halfW + platDepth + 1.2} ${t2 + railH/2 + 0.25} 0" width="0.1" height="${railH}" depth="${C.depth - 12}" color="${C.stoneDark}"></a-box>`;
+      // Right railing
+      html += `<a-box static-body position="${halfW - platDepth - 1.2} ${t2 + railH/2 + 0.25} 0" width="0.1" height="${railH}" depth="${C.depth - 12}" color="${C.stoneDark}"></a-box>`;
+
+      // Vertical railing slats
+      for (let z = -halfD + 8; z < halfD - 5; z += 3) {
+        html += `<a-box position="${-halfW + platDepth + 1.2} ${t2 + 0.55} ${z}" width="0.06" height="0.8" depth="0.06" color="${C.stoneDark}"></a-box>`;
+        html += `<a-box position="${halfW - platDepth - 1.2} ${t2 + 0.55} ${z}" width="0.06" height="0.8" depth="0.06" color="${C.stoneDark}"></a-box>`;
+      }
+
+      // TIER 3 - Second elevated platform (partial)
+      const t3 = C.tier3;
+      html += `<a-box static-body position="${-halfW + 3} ${t3} ${-halfD + 15}" width="6" height="${platThick}" depth="20" color="${C.stoneMedium}"></a-box>`;
+      html += `<a-box static-body position="${halfW - 3} ${t3} ${-halfD + 15}" width="6" height="${platThick}" depth="20" color="${C.stoneMedium}"></a-box>`;
+
+      // TIER 4 - Highest observation points
+      const t4 = C.tier4;
+      html += `<a-box static-body position="${-halfW + 4} ${t4} 0" width="5" height="${platThick}" depth="8" color="${C.stoneLight}"></a-box>`;
+      html += `<a-box static-body position="${halfW - 4} ${t4} 0" width="5" height="${platThick}" depth="8" color="${C.stoneLight}"></a-box>`;
+
+      return html;
+    }
+
+    // ============ STAIRCASES ============
+    function buildStaircases() {
+      let html = '';
+
+      // FOREGROUND STAIRS - steep, narrow, leading into primary arch
+      const stair1 = { x: -8, startZ: 25, endZ: 15, startY: 0, endY: C.tier2 };
+      html += buildStaircase(stair1.x, stair1.startZ, stair1.endZ, stair1.startY, stair1.endY, 2.5);
+
+      // RIGHT SIDE STAIRS - wide zigzag up to tier 2
+      const stair2 = { x: halfW - 6, startZ: halfD - 8, endZ: halfD - 20, startY: 0, endY: C.tier2 };
+      html += buildStaircase(stair2.x, stair2.startZ, stair2.endZ, stair2.startY, stair2.endY, 4);
+
+      // TIER 2 TO TIER 3 - left side
+      const stair3 = { x: -halfW + 5, startZ: -halfD + 20, endZ: -halfD + 8, startY: C.tier2, endY: C.tier3 };
+      html += buildStaircase(stair3.x, stair3.startZ, stair3.endZ, stair3.startY, stair3.endY, 3);
+
+      // TIER 3 TO TIER 4 - spiral approximation
+      const stair4 = { x: -halfW + 5, startZ: -5, endZ: 5, startY: C.tier3, endY: C.tier4 };
+      html += buildStaircase(stair4.x, stair4.startZ, stair4.endZ, stair4.startY, stair4.endY, 2.5);
+
+      // Stone balustrades along main staircase
+      const balusterX = halfW - 3;
+      for (let i = 0; i < 8; i++) {
+        const y = i * 1.5 + 1;
+        const z = halfD - 8 - i * 1.5;
+        html += `<a-box position="${balusterX} ${y + 0.5} ${z}" width="0.3" height="1" depth="0.3" color="${C.stoneLight}"></a-box>`;
+      }
+
+      return html;
+    }
+
+    function buildStaircase(x, startZ, endZ, startY, endY, width) {
+      let html = '';
+      const steps = Math.ceil(Math.abs(endY - startY) / 0.4);
+      const stepHeight = (endY - startY) / steps;
+      const stepDepth = (endZ - startZ) / steps;
+
+      for (let i = 0; i < steps; i++) {
+        const y = startY + i * stepHeight + stepHeight / 2;
+        const z = startZ + i * stepDepth;
+        const color = i % 2 === 0 ? C.stoneMedium : C.stoneLight;
+
+        html += `<a-box static-body position="${x} ${y} ${z}" width="${width}" height="${Math.abs(stepHeight)}" depth="${Math.abs(stepDepth)}" color="${color}"></a-box>`;
+      }
+
+      return html;
+    }
+
+    // ============ CATWALKS AND BRIDGES ============
+    function buildCatwalks() {
+      let html = '';
+
+      // MAIN DRAWBRIDGE - spans the central void at tier 2
+      const bridgeY = C.tier2 + 1;
+      const bridgeZ = 0;
+
+      // Bridge deck - appears to float
+      html += `<a-box static-body position="0 ${bridgeY} ${bridgeZ}" width="${C.width - 16}" height="0.3" depth="3" color="${C.stoneMedium}"></a-box>`;
+
+      // Bridge railings
+      html += `<a-box static-body position="0 ${bridgeY + 0.6} ${bridgeZ - 1.4}" width="${C.width - 16}" height="0.8" depth="0.1" color="${C.iron}"></a-box>`;
+      html += `<a-box static-body position="0 ${bridgeY + 0.6} ${bridgeZ + 1.4}" width="${C.width - 16}" height="0.8" depth="0.1" color="${C.iron}"></a-box>`;
+
+      // Iron railing verticals
+      for (let x = -halfW + 10; x < halfW - 8; x += 2.5) {
+        html += `<a-cylinder position="${x} ${bridgeY + 0.5} ${bridgeZ - 1.4}" radius="0.04" height="0.8" color="${C.iron}"></a-cylinder>`;
+        html += `<a-cylinder position="${x} ${bridgeY + 0.5} ${bridgeZ + 1.4}" radius="0.04" height="0.8" color="${C.iron}"></a-cylinder>`;
+      }
+
+      // SECONDARY CATWALK - tier 3, crosses at angle
+      const cat2Y = C.tier3 + 0.5;
+      html += `<a-box static-body position="0 ${cat2Y} -15" rotation="0 30 0" width="25" height="0.25" depth="2" color="${C.stoneDark}"></a-box>`;
+
+      // Suspended catwalk with chains
+      const cat3Y = C.tier2 + 8;
+      html += `<a-box static-body position="10 ${cat3Y} 20" width="15" height="0.2" depth="2" color="${C.wood}"></a-box>`;
+
+      return html;
+    }
+
+    // ============ COLUMNS AND PIERS ============
+    function buildPiers() {
+      let html = '';
+
+      // Massive central piers
+      const pierPositions = [
+        { x: -12, z: -15 }, { x: 12, z: -15 },
+        { x: -15, z: 10 }, { x: 15, z: 10 },
+        { x: 0, z: -25 },
+      ];
+
+      pierPositions.forEach(pos => {
+        // Main pier shaft
+        html += `<a-box static-body position="${pos.x} ${C.height/2} ${pos.z}" width="3" height="${C.height - 2}" depth="3" color="${C.stoneMedium}"></a-box>`;
+
+        // Pier base (wider)
+        html += `<a-box position="${pos.x} 1.5 ${pos.z}" width="4" height="3" depth="4" color="${C.stoneLight}"></a-box>`;
+
+        // Pier capital
+        html += `<a-box position="${pos.x} ${C.height - 3} ${pos.z}" width="4" height="2" depth="4" color="${C.stoneLight}"></a-box>`;
+
+        // Masonry lines
+        for (let y = 5; y < C.height - 5; y += 3) {
+          html += `<a-box position="${pos.x} ${y} ${pos.z + 1.51}" width="3.1" height="0.05" depth="0.02" color="${C.stoneVeryDark}"></a-box>`;
+        }
+      });
+
+      // Thinner columns between arches
+      const colPositions = [
+        { x: -20, z: 5 }, { x: 20, z: 5 },
+        { x: -22, z: -5 }, { x: 22, z: -5 },
+      ];
+
+      colPositions.forEach(pos => {
+        html += `<a-cylinder position="${pos.x} ${C.tier2 + 8} ${pos.z}" radius="0.8" height="16" color="${C.stoneMedium}"></a-cylinder>`;
+        // Column base
+        html += `<a-box position="${pos.x} ${C.tier2 + 0.5} ${pos.z}" width="2" height="1" depth="2" color="${C.stoneLight}"></a-box>`;
+        // Column capital
+        html += `<a-box position="${pos.x} ${C.tier2 + 16.5} ${pos.z}" width="2.2" height="1" depth="2.2" color="${C.stoneLight}"></a-box>`;
+      });
+
+      return html;
+    }
+
+    // ============ ARCHED WINDOWS AND OCULI ============
+    function buildFenestration() {
+      let html = '';
+
+      // Arched windows on walls
+      const windowPositions = [
+        { x: -halfW + 0.5, y: 8, z: -15, rotY: 90 },
+        { x: -halfW + 0.5, y: 8, z: 15, rotY: 90 },
+        { x: -halfW + 0.5, y: 22, z: 0, rotY: 90 },
+        { x: halfW - 0.5, y: 8, z: -15, rotY: -90 },
+        { x: halfW - 0.5, y: 8, z: 15, rotY: -90 },
+        { x: halfW - 0.5, y: 22, z: 0, rotY: -90 },
+      ];
+
+      windowPositions.forEach(win => {
+        // Window recess (dark void)
+        html += `<a-box position="${win.x} ${win.y} ${win.z}" rotation="0 ${win.rotY} 0" width="0.5" height="6" depth="3" color="#0a0908"></a-box>`;
+
+        // Arch top
+        html += `<a-cylinder position="${win.x} ${win.y + 3} ${win.z}" rotation="0 ${win.rotY} 90" radius="1.5" height="0.5" theta-length="180" color="${C.stoneDark}"></a-cylinder>`;
+
+        // Iron grate bars
+        for (let i = -1; i <= 1; i += 0.5) {
+          html += `<a-cylinder position="${win.x + (win.rotY > 0 ? 0.3 : -0.3)} ${win.y} ${win.z + i}" radius="0.04" height="6" color="${C.iron}"></a-cylinder>`;
+        }
+        // Horizontal bar
+        html += `<a-cylinder position="${win.x + (win.rotY > 0 ? 0.3 : -0.3)} ${win.y} ${win.z}" rotation="0 0 90" radius="0.04" height="3" color="${C.iron}"></a-cylinder>`;
+      });
+
+      // Oculi (round windows) high on walls
+      const oculiPositions = [
+        { x: 0, y: C.height - 8, z: -halfD + 0.5, rotY: 0 },
+        { x: 0, y: C.height - 8, z: halfD - 0.5, rotY: 180 },
+      ];
+
+      oculiPositions.forEach(oc => {
+        // Oculus frame
+        html += `<a-torus position="${oc.x} ${oc.y} ${oc.z}" rotation="90 ${oc.rotY} 0" radius="3" radius-tubular="0.4" color="${C.stoneLight}"></a-torus>`;
+        // Dark void
+        html += `<a-circle position="${oc.x} ${oc.y} ${oc.z + (oc.rotY === 0 ? 0.2 : -0.2)}" rotation="0 ${oc.rotY} 0" radius="2.8" color="#0a0908"></a-circle>`;
+        // Light beam from oculus
+        html += `<a-light type="spot" position="${oc.x} ${oc.y} ${oc.z + (oc.rotY === 0 ? 2 : -2)}" rotation="${oc.rotY === 0 ? 30 : -30} 0 0" color="#fff8e0" intensity="0.4" angle="25" penumbra="0.3" distance="30"></a-light>`;
+      });
+
+      return html;
+    }
+
+    // ============ CHAINS AND ROPES ============
+    function buildChains() {
+      let html = '';
+
+      // Heavy chains hanging from arch keystones
+      const chainPositions = [
+        { x: 0, y: 22, z: 15, length: 15 },
+        { x: -5, y: C.height - 2, z: 0, length: 20 },
+        { x: 5, y: C.height - 2, z: 0, length: 18 },
+        { x: -18, y: C.tier3 + 10, z: -10, length: 8 },
+        { x: 18, y: C.tier3 + 10, z: -10, length: 8 },
+      ];
+
+      chainPositions.forEach(chain => {
+        // Chain links approximated as connected cylinders
+        const links = Math.floor(chain.length / 0.6);
+        for (let i = 0; i < links; i++) {
+          const y = chain.y - i * 0.6;
+          const rot = i % 2 === 0 ? 0 : 90;
+          html += `<a-torus position="${chain.x} ${y} ${chain.z}" rotation="${rot} 0 0" radius="0.15" radius-tubular="0.03" color="${C.iron}"></a-torus>`;
+        }
+      });
+
+      // Thick ropes
+      const ropePositions = [
+        { x: 8, startY: C.height - 2, endY: C.tier2, z: 20 },
+        { x: -10, startY: C.tier3 + 8, endY: C.tier2, z: -5 },
+      ];
+
+      ropePositions.forEach(rope => {
+        const length = rope.startY - rope.endY;
+        html += `<a-cylinder position="${rope.x} ${(rope.startY + rope.endY) / 2} ${rope.z}" radius="0.08" height="${length}" color="${C.rope}"></a-cylinder>`;
+
+        // Rope fraying at bottom
+        for (let i = 0; i < 5; i++) {
+          const angle = (i / 5) * Math.PI * 2;
+          const dx = Math.cos(angle) * 0.1;
+          const dz = Math.sin(angle) * 0.1;
+          html += `<a-cylinder position="${rope.x + dx} ${rope.endY - 0.3} ${rope.z + dz}" rotation="${10 * Math.cos(angle)} 0 ${10 * Math.sin(angle)}" radius="0.015" height="0.6" color="${C.rope}"></a-cylinder>`;
+        }
+      });
+
+      return html;
+    }
+
+    // ============ PULLEYS AND MACHINERY ============
+    function buildPulleys() {
+      let html = '';
+
+      // Main pulley in primary arch
+      const pulleyX = 0;
+      const pulleyY = 20;
+      const pulleyZ = 15;
+
+      // Wooden frame
+      html += `<a-box position="${pulleyX} ${pulleyY + 1} ${pulleyZ}" width="3" height="0.4" depth="1" color="${C.wood}"></a-box>`;
+      html += `<a-box position="${pulleyX - 1.2} ${pulleyY + 0.3} ${pulleyZ}" width="0.3" height="1.8" depth="0.3" color="${C.wood}"></a-box>`;
+      html += `<a-box position="${pulleyX + 1.2} ${pulleyY + 0.3} ${pulleyZ}" width="0.3" height="1.8" depth="0.3" color="${C.wood}"></a-box>`;
+
+      // Pulley wheel
+      html += `<a-torus position="${pulleyX} ${pulleyY} ${pulleyZ}" rotation="0 90 0" radius="0.6" radius-tubular="0.1" color="${C.woodDark}"></a-torus>`;
+      html += `<a-cylinder position="${pulleyX} ${pulleyY} ${pulleyZ}" rotation="0 0 90" radius="0.15" height="0.4" color="${C.iron}"></a-cylinder>`;
+
+      // Rope through pulley
+      html += `<a-cylinder position="${pulleyX - 0.8} ${pulleyY - 5} ${pulleyZ}" radius="0.05" height="10" color="${C.rope}"></a-cylinder>`;
+      html += `<a-cylinder position="${pulleyX + 0.8} ${pulleyY - 3} ${pulleyZ}" radius="0.05" height="6" color="${C.rope}"></a-cylinder>`;
+
+      // Weight/bucket
+      html += `<a-cylinder position="${pulleyX - 0.8} ${pulleyY - 10.5} ${pulleyZ}" radius="0.4" height="1" color="${C.iron}" open-ended="true"></a-cylinder>`;
+
+      // Secondary pulleys
+      const pulley2 = { x: 15, y: C.tier3 + 5, z: 10 };
+      html += `<a-torus position="${pulley2.x} ${pulley2.y} ${pulley2.z}" rotation="0 90 0" radius="0.4" radius-tubular="0.08" color="${C.iron}"></a-torus>`;
+      html += `<a-cylinder position="${pulley2.x} ${pulley2.y - 4} ${pulley2.z}" radius="0.04" height="8" color="${C.rope}"></a-cylinder>`;
+
+      return html;
+    }
+
+    // ============ LANTERNS ============
+    function buildLanterns() {
+      let html = '';
+
+      const lanternPositions = [
+        { x: -10, y: 8, z: 20 },
+        { x: 10, y: 8, z: 20 },
+        { x: 0, y: 12, z: 0 },
+        { x: -20, y: C.tier2 + 4, z: -10 },
+        { x: 20, y: C.tier2 + 4, z: -10 },
+        { x: 0, y: C.tier3 + 3, z: -20 },
+        { x: -15, y: C.tier2 + 3, z: 25 },
+        { x: 15, y: C.tier2 + 3, z: 25 },
+      ];
+
+      lanternPositions.forEach((pos, idx) => {
+        // Chain suspending lantern
+        const chainLength = 3 + Math.random() * 2;
+        html += `<a-cylinder position="${pos.x} ${pos.y + chainLength/2 + 0.5} ${pos.z}" radius="0.02" height="${chainLength}" color="${C.iron}"></a-cylinder>`;
+
+        // Lantern cage
+        html += `<a-box position="${pos.x} ${pos.y} ${pos.z}" width="0.5" height="0.1" depth="0.5" color="${C.iron}"></a-box>`;
+        html += `<a-box position="${pos.x} ${pos.y + 0.8} ${pos.z}" width="0.5" height="0.1" depth="0.5" color="${C.iron}"></a-box>`;
+
+        // Vertical bars
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          const dx = Math.cos(angle) * 0.2;
+          const dz = Math.sin(angle) * 0.2;
+          html += `<a-cylinder position="${pos.x + dx} ${pos.y + 0.4} ${pos.z + dz}" radius="0.02" height="0.7" color="${C.iron}"></a-cylinder>`;
+        }
+
+        // Light inside
+        const intensity = 0.3 + Math.random() * 0.3;
+        html += `<a-light type="point" position="${pos.x} ${pos.y + 0.4} ${pos.z}" color="#ffcc88" intensity="${intensity}" distance="10" decay="2"></a-light>`;
+
+        // Flame glow
+        html += `<a-sphere position="${pos.x} ${pos.y + 0.4} ${pos.z}" radius="0.08" color="#ffaa44" material="emissive: #ff8800; emissiveIntensity: 0.8"></a-sphere>`;
+      });
+
+      return html;
+    }
+
+    // ============ IRON RINGS AND DETAILS ============
+    function buildIronDetails() {
+      let html = '';
+
+      // Iron rings bolted into piers
+      const ringPositions = [
+        { x: -12 + 1.6, y: 1.5, z: -15 },
+        { x: 12 - 1.6, y: 1.5, z: -15 },
+        { x: -15 + 1.6, y: 1.5, z: 10 },
+        { x: 15 - 1.6, y: 1.5, z: 10 },
+        { x: -halfW + 1.2, y: 1.2, z: 0 },
+        { x: halfW - 1.2, y: 1.2, z: 0 },
+        { x: 0, y: 1.2, z: -halfD + 1.2 },
+      ];
+
+      ringPositions.forEach(pos => {
+        // Mounting plate
+        html += `<a-box position="${pos.x} ${pos.y} ${pos.z}" width="0.3" height="0.3" depth="0.05" color="${C.ironRust}"></a-box>`;
+        // Ring
+        html += `<a-torus position="${pos.x} ${pos.y - 0.1} ${pos.z + 0.08}" rotation="90 0 0" radius="0.12" radius-tubular="0.025" color="${C.ironRust}"></a-torus>`;
+        // Bolts
+        html += `<a-sphere position="${pos.x - 0.1} ${pos.y + 0.1} ${pos.z + 0.03}" radius="0.02" color="${C.iron}"></a-sphere>`;
+        html += `<a-sphere position="${pos.x + 0.1} ${pos.y + 0.1} ${pos.z + 0.03}" radius="0.02" color="${C.iron}"></a-sphere>`;
+        html += `<a-sphere position="${pos.x - 0.1} ${pos.y - 0.1} ${pos.z + 0.03}" radius="0.02" color="${C.iron}"></a-sphere>`;
+        html += `<a-sphere position="${pos.x + 0.1} ${pos.y - 0.1} ${pos.z + 0.03}" radius="0.02" color="${C.iron}"></a-sphere>`;
+      });
+
+      // Weathered/damaged stone details
+      for (let i = 0; i < 15; i++) {
+        const x = (Math.random() - 0.5) * C.width * 0.8;
+        const y = Math.random() * 3;
+        const z = (Math.random() - 0.5) * C.depth * 0.8;
+        const size = 0.2 + Math.random() * 0.4;
+        html += `<a-box position="${x} ${y} ${z}" width="${size}" height="${size * 0.5}" depth="${size}" rotation="0 ${Math.random() * 360} ${Math.random() * 20 - 10}" color="${C.stoneLight}"></a-box>`;
+      }
+
+      return html;
+    }
+
+    // ============ LIGHTING (CHIAROSCURO) ============
+    function buildLighting() {
+      let html = '';
+
+      // Primary directional light - high angle from upper right (clerestory simulation)
+      html += `<a-light type="directional" position="20 40 10" intensity="0.3" color="#fff8e0" target="#carceri"></a-light>`;
+
+      // Ambient - very low for deep shadows
+      html += `<a-light type="ambient" color="#2a2520" intensity="0.15"></a-light>`;
+
+      // Hemisphere for subtle fill
+      html += `<a-light type="hemisphere" color="#4a4540" ground-color="#1a1510" intensity="0.2"></a-light>`;
+
+      // Spot lights creating dramatic shafts
+      html += `<a-light type="spot" position="0 ${C.height - 5} 15" rotation="-60 0 0" color="#fff8e0" intensity="0.5" angle="20" penumbra="0.5" distance="40" decay="1.5"></a-light>`;
+      html += `<a-light type="spot" position="-15 ${C.height - 5} -10" rotation="-70 30 0" color="#fff0d0" intensity="0.3" angle="25" penumbra="0.4" distance="35" decay="1.5"></a-light>`;
+      html += `<a-light type="spot" position="15 ${C.height - 5} -10" rotation="-70 -30 0" color="#fff0d0" intensity="0.3" angle="25" penumbra="0.4" distance="35" decay="1.5"></a-light>`;
+
+      // Floor-level accent lights (very dim, for depth)
+      html += `<a-light type="point" position="0 2 0" color="#aa8866" intensity="0.1" distance="15" decay="2"></a-light>`;
+
+      return html;
+    }
+
+    // ============ EXIT DOOR ============
+    function buildExitDoor() {
+      let html = '';
+
+      const doorX = 0;
+      const doorY = 1.5;
+      const doorZ = halfD - 1.2;
+
+      // Door frame
+      html += `<a-box position="${doorX} ${doorY} ${doorZ}" width="2.2" height="3.2" depth="0.4" color="${C.stoneLight}"></a-box>`;
+
+      // Door panel
+      html += `<a-box id="exit-door" class="interactive" position="${doorX} ${doorY} ${doorZ + 0.15}" width="1.8" height="2.8" depth="0.15" color="#1a1515"></a-box>`;
+
+      // Door handle
+      html += `<a-torus position="${doorX + 0.6} ${doorY} ${doorZ + 0.3}" rotation="0 0 90" radius="0.1" radius-tubular="0.02" color="${C.ironRust}"></a-torus>`;
+
+      // Label
+      html += `<a-text value="Return to Library" position="${doorX} ${doorY + 1.8} ${doorZ + 0.3}" rotation="0 180 0" align="center" color="#665550" width="2"></a-text>`;
+
+      // Subtle light near door
+      html += `<a-light type="point" position="${doorX} ${doorY + 1} ${doorZ - 1}" color="#aaaaaa" intensity="0.2" distance="5"></a-light>`;
+
+      return html;
+    }
+
+    // ============ INTERACTIONS ============
+    function setupInteractions() {
+      const exitDoor = document.getElementById('exit-door');
+      if (exitDoor) {
+        exitDoor.addEventListener('click', () => {
+          window.location.href = 'index.html';
+        });
+        exitDoor.addEventListener('mouseenter', () => {
+          exitDoor.setAttribute('color', '#2a2525');
+        });
+        exitDoor.addEventListener('mouseleave', () => {
+          exitDoor.setAttribute('color', '#1a1515');
+        });
+      }
+    }
+
+    // ============ LOCATION TRACKING ============
+    setInterval(() => {
+      const rig = document.getElementById('rig');
+      if (!rig) return;
+
+      const pos = rig.object3D.position;
+      const location = document.getElementById('location');
+
+      // Determine location based on height
+      let name = 'The First Carcere';
+      if (pos.y > C.tier4 - 2) {
+        name = 'The Highest Gallery';
+      } else if (pos.y > C.tier3 - 2) {
+        name = 'The Third Tier';
+      } else if (pos.y > C.tier2 - 2) {
+        name = 'The Second Tier';
+      } else if (pos.z < -20) {
+        name = 'The Deep Vault';
+      } else if (pos.z > 20) {
+        name = 'Near the Entrance';
+      }
+
+      location.textContent = name;
+    }, 500);
+
+    // ============ INITIALIZE ============
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      buildCarceri();
+
+      // Start ambient audio on first click
+      document.addEventListener('click', () => {
+        const audio = document.getElementById('ambient-drip');
+        if (audio && audio.paused) {
+          audio.play().catch(() => {});
+        }
+      }, { once: true });
+    });
+  </script>
+</body>
+</html>

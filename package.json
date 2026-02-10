@@ -1,0 +1,24 @@
+{
+  "name": "threedeehome",
+  "version": "1.0.0",
+  "description": "A personal 3D digital library space built with A-Frame. Walk through your virtual reading room.",
+  "main": "export_statues.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexrbngui-sudo/threedeehome.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alexrbngui-sudo/threedeehome/issues"
+  },
+  "homepage": "https://github.com/alexrbngui-sudo/threedeehome#readme",
+  "dependencies": {
+    "puppeteer": "^24.36.0",
+    "three": "^0.182.0"
+  }
+}

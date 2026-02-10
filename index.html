@@ -3,16 +3,42 @@
 <head>
   <meta charset="utf-8">
   <title>My Digital Library</title>
-  <meta name="description" content="A personal 3D library space">
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <style>
     body { margin: 0; overflow: hidden; }
+
+    #stats {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: #888;
+      font-family: -apple-system, sans-serif;
+      font-size: 13px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #refresh-btn {
+      background: #4a7c59;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    #refresh-btn:hover { background: #5a9c69; }
+    #refresh-btn:disabled { opacity: 0.5; cursor: wait; }
+
     #book-info {
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.85);
       color: #fff;
       padding: 15px 25px;
       border-radius: 8px;
@@ -21,253 +47,624 @@
       max-width: 500px;
       text-align: center;
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: opacity 0.2s;
       pointer-events: none;
       z-index: 1000;
     }
     #book-info.visible { opacity: 1; }
-    #book-info .title { font-weight: bold; margin-bottom: 5px; }
+    #book-info .title { font-weight: bold; margin-bottom: 4px; }
     #book-info .author { color: #aaa; font-style: italic; }
-    #book-info .sample { color: #f90; font-size: 12px; margin-top: 5px; }
-    #stats {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      color: #666;
-      font-family: monospace;
-      font-size: 12px;
-      z-index: 1000;
-    }
   </style>
 </head>
 <body>
+  <div id="stats">
+    <span id="book-count">Loading...</span>
+    <button id="refresh-btn" onclick="refreshLibrary()">Sync</button>
+  </div>
+
   <div id="book-info">
     <div class="title"></div>
     <div class="author"></div>
-    <div class="sample"></div>
   </div>
-  <div id="stats">Loading library...</div>
 
   <a-scene background="color: #1a1a2e">
-
-    <!-- Camera with WASD movement and mouse look -->
-    <a-entity id="rig" position="0 0 4">
+    <a-entity id="rig" position="0 0 0">
       <a-entity
         id="camera"
         camera
         look-controls="pointerLockEnabled: true"
-        wasd-controls="acceleration: 30"
+        wasd-controls="acceleration: 40"
         position="0 1.6 0"
-        raycaster="objects: .book; far: 5"
+        raycaster="objects: .book, .portal; far: 4"
         cursor="rayOrigin: mouse">
       </a-entity>
     </a-entity>
 
-    <!-- Lighting -->
-    <a-light type="ambient" color="#404040" intensity="0.4"></a-light>
-    <a-light type="point" position="0 4 0" intensity="1" color="#ffeecc" decay="2" distance="15"></a-light>
-    <a-light type="point" position="-4 3 -4" intensity="0.5" color="#ccddff" decay="2" distance="10"></a-light>
-    <a-light type="point" position="4 3 -4" intensity="0.5" color="#ccddff" decay="2" distance="10"></a-light>
+    <a-light type="ambient" color="#ffffff" intensity="0.6"></a-light>
+    <a-entity id="lights"></a-entity>
 
-    <!-- Room: Floor -->
-    <a-plane position="0 0 0" rotation="-90 0 0" width="12" height="12" color="#2d2d44" material="roughness: 0.8"></a-plane>
+    <a-entity id="room"></a-entity>
+    <a-entity id="shelves"></a-entity>
+    <a-entity id="books"></a-entity>
+    <a-entity id="piranesi-portal"></a-entity>
+    <a-entity id="second-door"></a-entity>
+    <a-entity id="carceri-portal"></a-entity>
+    <a-entity id="uws-portal"></a-entity>
 
-    <!-- Room: Ceiling -->
-    <a-plane position="0 5 0" rotation="90 0 0" width="12" height="12" color="#1a1a2e"></a-plane>
-
-    <!-- Room: Walls -->
-    <a-plane position="0 2.5 -6" width="12" height="5" color="#252538"></a-plane>
-    <a-plane position="-6 2.5 0" rotation="0 90 0" width="12" height="5" color="#252538"></a-plane>
-    <a-plane position="6 2.5 0" rotation="0 -90 0" width="12" height="5" color="#252538"></a-plane>
-    <a-plane position="0 2.5 6" rotation="0 180 0" width="12" height="5" color="#252538"></a-plane>
-
-    <!-- Bookshelves (frames only - books added dynamically) -->
-
-    <!-- Back Wall Bookshelf -->
-    <a-entity id="bookshelf-back" position="0 0 -5.5">
-      <a-box position="0 2 0" width="6" height="4" depth="0.4" color="#4a3728"></a-box>
-      <a-box position="0 0.5 0.1" width="5.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-      <a-box position="0 1.3 0.1" width="5.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-      <a-box position="0 2.1 0.1" width="5.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-      <a-box position="0 2.9 0.1" width="5.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-      <a-box position="0 3.7 0.1" width="5.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-    </a-entity>
-
-    <!-- Left Wall Bookshelf -->
-    <a-entity id="bookshelf-left" position="-5.5 0 -2" rotation="0 90 0">
-      <a-box position="0 1.5 0" width="4" height="3" depth="0.4" color="#4a3728"></a-box>
-      <a-box position="0 0.4 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-      <a-box position="0 1.1 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-      <a-box position="0 1.8 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-      <a-box position="0 2.5 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-    </a-entity>
-
-    <!-- Right Wall Bookshelf -->
-    <a-entity id="bookshelf-right" position="5.5 0 -2" rotation="0 -90 0">
-      <a-box position="0 1.5 0" width="4" height="3" depth="0.4" color="#4a3728"></a-box>
-      <a-box position="0 0.4 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-      <a-box position="0 1.1 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-      <a-box position="0 1.8 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-      <a-box position="0 2.5 0.1" width="3.8" height="0.05" depth="0.35" color="#3d2e22"></a-box>
-    </a-entity>
-
-    <!-- Furniture -->
-    <a-entity id="chair" position="3 0 2">
-      <a-box position="0 0.45 0" width="0.8" height="0.1" depth="0.8" color="#8b4513"></a-box>
-      <a-box position="0 0.9 -0.35" width="0.8" height="0.8" depth="0.1" color="#8b4513"></a-box>
-      <a-box position="-0.3 0.2 0.3" width="0.08" height="0.4" depth="0.08" color="#5d3a1a"></a-box>
-      <a-box position="0.3 0.2 0.3" width="0.08" height="0.4" depth="0.08" color="#5d3a1a"></a-box>
-      <a-box position="-0.3 0.2 -0.3" width="0.08" height="0.4" depth="0.08" color="#5d3a1a"></a-box>
-      <a-box position="0.3 0.2 -0.3" width="0.08" height="0.4" depth="0.08" color="#5d3a1a"></a-box>
-    </a-entity>
-
-    <a-entity id="side-table" position="4 0 2">
-      <a-cylinder position="0 0.5 0" radius="0.3" height="0.05" color="#5d3a1a"></a-cylinder>
-      <a-cylinder position="0 0.25 0" radius="0.05" height="0.5" color="#5d3a1a"></a-cylinder>
-      <a-cylinder position="0 0 0" radius="0.25" height="0.05" color="#5d3a1a"></a-cylinder>
-    </a-entity>
-
-    <a-plane position="0 0.01 0" rotation="-90 0 0" width="5" height="4" color="#4a3650" material="roughness: 1"></a-plane>
-
-    <a-entity id="globe" position="-4 0 3">
-      <a-box position="0 0.5 0" width="0.3" height="1" depth="0.3" color="#5d3a1a"></a-box>
-      <a-sphere position="0 1.3 0" radius="0.4" color="#2980b9" material="metalness: 0.3; roughness: 0.7"></a-sphere>
-    </a-entity>
-
-    <a-plane position="-5.95 2.5 2" rotation="0 90 0" width="2" height="2.5" color="#87ceeb" material="emissive: #87ceeb; emissiveIntensity: 0.3"></a-plane>
-
-    <a-text value="Click to enable mouse look\nWASD to move\nLook at books to see details" position="0 2.5 3" rotation="0 180 0" align="center" color="#aaaaaa" width="4"></a-text>
-
-    <!-- Container for dynamically added books -->
-    <a-entity id="books-container"></a-entity>
-
+    <a-text id="instructions"
+            value="Click to look around | WASD to move"
+            position="0 2 2" rotation="0 180 0" align="center" color="#555" width="4"></a-text>
   </a-scene>
 
   <script>
-    // Book colors - rich, varied palette
-    const BOOK_COLORS = [
-      '#c41e3a', '#1e5c3a', '#2c3e8c', '#8c6b2c', '#6b2c8c', '#2c8c8c', '#8c2c2c',
-      '#e67e22', '#27ae60', '#8e44ad', '#2980b9', '#c0392b', '#16a085', '#d35400',
-      '#1abc9c', '#9b59b6', '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#34495e'
-    ];
-
-    // Generate color from string hash
-    function stringToColor(str) {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return BOOK_COLORS[Math.abs(hash) % BOOK_COLORS.length];
-    }
-
-    // Shelf configurations
-    const SHELVES = {
-      back: {
-        parent: 'bookshelf-back',
-        shelves: [
-          { y: 0.8, width: 5.4, z: 0.15 },   // bottom
-          { y: 1.6, width: 5.4, z: 0.15 },
-          { y: 2.4, width: 5.4, z: 0.15 },
-          { y: 3.2, width: 5.4, z: 0.15 },   // top
-        ]
+    // ============ COLLISION COMPONENT ============
+    AFRAME.registerComponent('room-bounds', {
+      schema: {
+        minX: {type: 'number', default: -5},
+        maxX: {type: 'number', default: 5},
+        minZ: {type: 'number', default: -10},
+        maxZ: {type: 'number', default: 10},
+        shelfX: {type: 'number', default: -5},  // X position of shelf barrier
+        margin: {type: 'number', default: 0.5}
       },
-      left: {
-        parent: 'bookshelf-left',
-        shelves: [
-          { y: 0.7, width: 3.4, z: 0.15 },
-          { y: 1.4, width: 3.4, z: 0.15 },
-          { y: 2.1, width: 3.4, z: 0.15 },
-        ]
+
+      init: function() {
+        this.lastPosition = new THREE.Vector3();
+        this.lastPosition.copy(this.el.object3D.position);
       },
-      right: {
-        parent: 'bookshelf-right',
-        shelves: [
-          { y: 0.7, width: 3.4, z: 0.15 },
-          { y: 1.4, width: 3.4, z: 0.15 },
-          { y: 2.1, width: 3.4, z: 0.15 },
-        ]
+
+      tick: function() {
+        const pos = this.el.object3D.position;
+        const d = this.data;
+        const m = d.margin;
+
+        // Clamp position to room bounds (walls)
+        if (pos.x < d.minX + m) { pos.x = d.minX + m; }
+        if (pos.x > d.maxX - m) { pos.x = d.maxX - m; }
+        if (pos.z < d.minZ + m) { pos.z = d.minZ + m; }
+        if (pos.z > d.maxZ - m) { pos.z = d.maxZ - m; }
+
+        // Shelf barrier - can't go past shelves on left wall
+        // Shelves are about 0.5m deep from wall
+        if (pos.x < d.shelfX + 1.0) { pos.x = d.shelfX + 1.0; }
       }
-    };
+    });
 
-    // Create a book entity
-    function createBook(book, x, y, z) {
-      const el = document.createElement('a-box');
-      const width = 0.08 + Math.random() * 0.06;
-      const height = 0.5 + Math.random() * 0.2;
-      const depth = 0.2;
+    // ============ CONFIG ============
+    const BOOK_WIDTH = 0.58;
+    const BOOK_HEIGHT = 0.64;
+    const BOOK_DEPTH = 0.08;
+    const BOOK_GAP = 0.1;
 
-      el.setAttribute('position', `${x} ${y + height/2} ${z}`);
-      el.setAttribute('width', width);
-      el.setAttribute('height', height);
-      el.setAttribute('depth', depth);
-      el.setAttribute('color', stringToColor(book.title));
-      el.setAttribute('class', 'book');
-      el.setAttribute('data-title', book.title);
-      el.setAttribute('data-author', book.author);
-      el.setAttribute('data-sample', book.isSample ? 'true' : 'false');
+    const SHELF_ROWS = 5;
+    const ROW_HEIGHT = 0.7;
+    const BOOKS_PER_ROW = 8;
+    const SHELF_DEPTH = 0.3;
 
-      // Hover events
-      el.addEventListener('mouseenter', showBookInfo);
-      el.addEventListener('mouseleave', hideBookInfo);
+    const ROOM_HEIGHT = 4;
+    const ROOM_WIDTH = 12;
 
-      return { el, width };
+    // ============ STATE ============
+    let allBooks = [];
+    let hoveredBook = null;
+
+    // ============ INIT ============
+    async function init() {
+      try {
+        allBooks = await fetch('/library.json?t=' + Date.now()).then(r => r.json());
+
+        // Books come sorted A-Z from Hardcover export, reverse so A is at entrance
+        allBooks.reverse();
+
+        const roomLength = calculateRoomLength();
+
+        buildRoom(roomLength);
+        buildShelves(roomLength);
+        buildLights(roomLength);
+        placeBooks(roomLength);
+        buildPiranesiPortal(roomLength);
+        buildSecondDoor(roomLength);
+        buildCarceriPortal(roomLength);
+        buildUWSPortal(roomLength);
+
+        document.getElementById('book-count').textContent = `${allBooks.length} books`;
+
+      } catch (err) {
+        console.error('Failed to load:', err);
+        document.getElementById('book-count').textContent = 'Failed to load';
+      }
     }
 
-    // Show book info popup
-    function showBookInfo(evt) {
-      const el = evt.target;
-      const info = document.getElementById('book-info');
-      info.querySelector('.title').textContent = el.getAttribute('data-title');
-      info.querySelector('.author').textContent = 'by ' + el.getAttribute('data-author');
-      info.querySelector('.sample').textContent = el.getAttribute('data-sample') === 'true' ? '(Sample)' : '';
-      info.classList.add('visible');
+    async function refreshLibrary() {
+      const btn = document.getElementById('refresh-btn');
+      const countEl = document.getElementById('book-count');
+
+      btn.disabled = true;
+      btn.textContent = 'Syncing...';
+      countEl.textContent = 'Syncing from Hardcover...';
+
+      try {
+        const resp = await fetch('/api/refresh', { method: 'POST' });
+        const data = await resp.json();
+
+        if (resp.ok) {
+          // Reload the page to show new books
+          window.location.reload();
+        } else {
+          countEl.textContent = 'Sync failed';
+          btn.textContent = 'Sync';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        console.error('Refresh failed:', err);
+        countEl.textContent = 'Sync failed';
+        btn.textContent = 'Sync';
+        btn.disabled = false;
+      }
     }
 
-    function hideBookInfo() {
-      document.getElementById('book-info').classList.remove('visible');
+    // ============ LAYOUT ============
+    function calculateRoomLength() {
+      const booksPerShelf = BOOKS_PER_ROW * SHELF_ROWS;
+      const shelvesNeeded = Math.ceil(allBooks.length / booksPerShelf);
+      const shelfWidth = (BOOK_WIDTH + BOOK_GAP) * BOOKS_PER_ROW + 0.2;
+      return Math.max(shelvesNeeded * shelfWidth + 4, 16);
     }
 
-    // Place books on shelves
-    function placeBooks(books) {
-      const container = document.getElementById('books-container');
+    // ============ BUILD ROOM ============
+    function buildRoom(roomLength) {
+      const room = document.getElementById('room');
+      const w = ROOM_WIDTH;
+      const h = ROOM_HEIGHT;
+
+      room.innerHTML = `
+        <a-plane position="0 0 0" rotation="-90 0 0" width="${w}" height="${roomLength}" color="#3a3a4a" material="roughness: 0.9"></a-plane>
+        <a-plane position="0 ${h} 0" rotation="90 0 0" width="${w}" height="${roomLength}" color="#2a2a3a"></a-plane>
+        <a-plane position="0 ${h/2} ${-roomLength/2}" width="${w}" height="${h}" color="#2d2d3d"></a-plane>
+        <a-plane position="0 ${h/2} ${roomLength/2}" rotation="0 180 0" width="${w}" height="${h}" color="#2d2d3d"></a-plane>
+        <a-plane position="${-w/2} ${h/2} 0" rotation="0 90 0" width="${roomLength}" height="${h}" color="#2d2d3d"></a-plane>
+        <a-plane position="${w/2} ${h/2} 0" rotation="0 -90 0" width="${roomLength}" height="${h}" color="#2d2d3d"></a-plane>
+      `;
+
+      // Position player at entrance (positive z, facing shelves on left)
+      const rig = document.getElementById('rig');
+      rig.setAttribute('position', `2 0 ${roomLength/2 - 2}`);
+
+      // Set collision bounds (walls + shelf barrier)
+      rig.setAttribute('room-bounds', {
+        minX: -w/2,
+        maxX: w/2,
+        minZ: -roomLength/2,
+        maxZ: roomLength/2,
+        shelfX: -w/2,
+        margin: 0.4
+      });
+
+      document.getElementById('instructions').setAttribute('position', `0 2 ${roomLength/2 - 1}`);
+    }
+
+    // ============ BUILD LIGHTS ============
+    function buildLights(roomLength) {
+      const lights = document.getElementById('lights');
+      let html = '';
+
+      // Lights along the room
+      for (let z = -roomLength/2 + 3; z < roomLength/2; z += 5) {
+        html += `<a-light type="point" position="0 3.5 ${z}" intensity="0.7" color="#ffffee" decay="2" distance="8"></a-light>`;
+      }
+
+      lights.innerHTML = html;
+    }
+
+    // ============ BUILD SHELVES ============
+    function buildShelves(roomLength) {
+      const container = document.getElementById('shelves');
+      container.innerHTML = '';
+
+      const shelfWidth = (BOOK_WIDTH + BOOK_GAP) * BOOKS_PER_ROW + 0.2;
+      const booksPerShelf = BOOKS_PER_ROW * SHELF_ROWS;
+      const shelvesNeeded = Math.ceil(allBooks.length / booksPerShelf);
+
+      const wallX = -ROOM_WIDTH / 2 + 0.1; // Left wall
+      const shelfHeight = SHELF_ROWS * ROW_HEIGHT + 0.2;
+
+      for (let s = 0; s < shelvesNeeded; s++) {
+        const z = roomLength / 2 - 2 - s * shelfWidth - shelfWidth / 2;
+
+        const unit = document.createElement('a-entity');
+        unit.setAttribute('position', `${wallX} 0 ${z}`);
+        unit.setAttribute('rotation', '0 90 0');
+
+        // Shelf planks only (minimal - no back panel)
+        for (let row = 0; row <= SHELF_ROWS; row++) {
+          const plank = document.createElement('a-box');
+          plank.setAttribute('position', `0 ${row * ROW_HEIGHT + 0.08} ${SHELF_DEPTH / 2}`);
+          plank.setAttribute('width', shelfWidth);
+          plank.setAttribute('height', 0.02);
+          plank.setAttribute('depth', SHELF_DEPTH);
+          plank.setAttribute('color', '#6b5a4a');
+          unit.appendChild(plank);
+        }
+
+        container.appendChild(unit);
+      }
+    }
+
+    // ============ PLACE BOOKS ============
+    function placeBooks(roomLength) {
+      const container = document.getElementById('books');
+      container.innerHTML = '';
+
+      const shelfWidth = (BOOK_WIDTH + BOOK_GAP) * BOOKS_PER_ROW + 0.2;
+      const wallX = -ROOM_WIDTH / 2 + 0.1;
+
       let bookIndex = 0;
 
-      // Distribute books across shelves
-      const shelfGroups = ['back', 'left', 'right'];
+      const shelvesNeeded = Math.ceil(allBooks.length / (BOOKS_PER_ROW * SHELF_ROWS));
 
-      for (const groupName of shelfGroups) {
-        const group = SHELVES[groupName];
-        const parent = document.getElementById(group.parent);
+      for (let s = 0; s < shelvesNeeded && bookIndex < allBooks.length; s++) {
+        const shelfZ = roomLength / 2 - 2 - s * shelfWidth - shelfWidth / 2;
 
-        for (const shelf of group.shelves) {
-          let x = -shelf.width / 2 + 0.1;
+        for (let row = 0; row < SHELF_ROWS && bookIndex < allBooks.length; row++) {
+          for (let col = 0; col < BOOKS_PER_ROW && bookIndex < allBooks.length; col++) {
+            const book = allBooks[bookIndex];
 
-          while (x < shelf.width / 2 - 0.1 && bookIndex < books.length) {
-            const book = books[bookIndex];
-            const { el, width } = createBook(book, x, shelf.y, shelf.z);
-            parent.appendChild(el);
+            const localX = -shelfWidth / 2 + 0.15 + col * (BOOK_WIDTH + BOOK_GAP);
+            const localY = row * ROW_HEIGHT + 0.08 + BOOK_HEIGHT / 2 + 0.03;
+            const localZ = SHELF_DEPTH / 2 + BOOK_DEPTH / 2 + 0.01;
 
-            x += width + 0.02 + Math.random() * 0.03; // Small gap between books
+            const bookEl = createBookElement(book, localX, localY, localZ);
+
+            const wrapper = document.createElement('a-entity');
+            wrapper.setAttribute('position', `${wallX} 0 ${shelfZ}`);
+            wrapper.setAttribute('rotation', '0 90 0');
+            wrapper.appendChild(bookEl);
+            container.appendChild(wrapper);
+
             bookIndex++;
           }
         }
       }
-
-      document.getElementById('stats').textContent = `${bookIndex} books displayed`;
     }
 
-    // Load library and create books
-    fetch('kindle_library.json')
-      .then(r => r.json())
-      .then(books => {
-        // Filter out samples if desired, or keep all
-        // const owned = books.filter(b => !b.isSample);
-        placeBooks(books);
-      })
-      .catch(err => {
-        console.error('Failed to load library:', err);
-        document.getElementById('stats').textContent = 'Failed to load library. Run locally with a server.';
+    function createBookElement(book, x, y, z) {
+      const el = document.createElement('a-entity');
+      el.setAttribute('position', `${x} ${y} ${z}`);
+      el.setAttribute('class', 'book');
+      el.setAttribute('data-title', book.title);
+      el.setAttribute('data-author', book.author || 'Unknown');
+
+      const body = document.createElement('a-box');
+      body.setAttribute('width', BOOK_WIDTH);
+      body.setAttribute('height', BOOK_HEIGHT);
+      body.setAttribute('depth', BOOK_DEPTH);
+      body.setAttribute('color', getBookColor(book));
+      el.appendChild(body);
+
+      const title = document.createElement('a-text');
+      title.setAttribute('value', book.title);
+      title.setAttribute('position', `0 0.08 ${BOOK_DEPTH / 2 + 0.003}`);
+      title.setAttribute('align', 'center');
+      title.setAttribute('color', '#ffffff');
+      title.setAttribute('width', BOOK_WIDTH * 0.9);
+      title.setAttribute('wrap-count', 20);
+      title.setAttribute('side', 'front');
+      el.appendChild(title);
+
+      const author = document.createElement('a-text');
+      author.setAttribute('value', book.author || '');
+      author.setAttribute('position', `0 -0.2 ${BOOK_DEPTH / 2 + 0.003}`);
+      author.setAttribute('align', 'center');
+      author.setAttribute('color', '#cccccc');
+      author.setAttribute('width', BOOK_WIDTH * 0.45);
+      author.setAttribute('wrap-count', 16);
+      author.setAttribute('side', 'front');
+      el.appendChild(author);
+
+      el.addEventListener('mouseenter', () => onBookHover(el, book));
+      el.addEventListener('mouseleave', onBookLeave);
+
+      return el;
+    }
+
+    function getBookColor(book) {
+      let hash = 0;
+      for (let i = 0; i < book.title.length; i++) {
+        hash = book.title.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const colors = [
+        '#7c4a5e', '#4a5e7c', '#5e7c4a', '#7c5e4a', '#5a4a6e',
+        '#4a6e6e', '#6e4a4a', '#5e6a4a', '#4a5a6e', '#6e5a4a'
+      ];
+      return colors[Math.abs(hash) % colors.length];
+    }
+
+    // ============ PIRANESI PORTAL ============
+    function buildPiranesiPortal(roomLength) {
+      const container = document.getElementById('piranesi-portal');
+      const portalWidth = 1.5;
+      const portalHeight = 2.8;
+      const wallX = ROOM_WIDTH / 2;
+      const portalZ = roomLength / 4;
+
+      let html = `
+        <a-box position="${wallX - 0.05} ${portalHeight/2} ${portalZ}" rotation="0 0 0"
+               width="0.12" height="${portalHeight}" depth="${portalWidth + 0.3}"
+               color="#8a8478" material="roughness: 0.8"></a-box>
+        <a-box position="${wallX - 0.05} ${portalHeight + 0.1} ${portalZ}" rotation="0 0 0"
+               width="0.15" height="0.2" depth="${portalWidth + 0.4}"
+               color="#7a7468"></a-box>
+
+        <a-box id="piranesi-door" class="portal"
+               position="${wallX - 0.1} ${portalHeight/2} ${portalZ}"
+               width="0.08" height="${portalHeight - 0.1}" depth="${portalWidth}"
+               color="#1a1a2a" material="opacity: 0.9"></a-box>
+
+        <a-light type="point" position="${wallX - 0.5} ${portalHeight/2} ${portalZ}"
+                 color="#9999bb" intensity="0.3" decay="2" distance="3"></a-light>
+
+        <a-text value="The House"
+                position="${wallX - 0.15} ${portalHeight + 0.4} ${portalZ}"
+                rotation="0 -90 0" align="center" color="#9999aa" width="2"></a-text>
+        <a-text value="Click to enter"
+                position="${wallX - 0.15} 0.5 ${portalZ}"
+                rotation="0 -90 0" align="center" color="#666" width="1.2"></a-text>
+      `;
+
+      container.innerHTML = html;
+
+      const portal = document.getElementById('piranesi-door');
+      portal.addEventListener('click', () => {
+        window.location.href = 'piranesi.html';
       });
+      portal.addEventListener('mouseenter', () => {
+        portal.setAttribute('color', '#2a2a4a');
+        portal.setAttribute('material', 'opacity: 1');
+      });
+      portal.addEventListener('mouseleave', () => {
+        portal.setAttribute('color', '#1a1a2a');
+        portal.setAttribute('material', 'opacity: 0.9');
+      });
+    }
+
+    // ============ SECOND DOOR ============
+    function buildSecondDoor(roomLength) {
+      const container = document.getElementById('second-door');
+      const doorWidth = 1.2;
+      const doorHeight = 2.5;
+      const wallX = ROOM_WIDTH / 2;
+      const doorZ = roomLength / 4 + 4; // Left of Piranesi portal (higher Z = closer to entrance)
+
+      let html = `
+        <a-box position="${wallX - 0.05} ${doorHeight/2} ${doorZ}" rotation="0 0 0"
+               width="0.12" height="${doorHeight}" depth="${doorWidth + 0.2}"
+               color="#5a4a3a" material="roughness: 0.8"></a-box>
+        <a-box position="${wallX - 0.05} ${doorHeight + 0.1} ${doorZ}" rotation="0 0 0"
+               width="0.15" height="0.15" depth="${doorWidth + 0.3}"
+               color="#4a3a2a"></a-box>
+
+        <a-box id="second-door-panel" class="portal"
+               position="${wallX - 0.1} ${doorHeight/2} ${doorZ}"
+               width="0.06" height="${doorHeight - 0.1}" depth="${doorWidth}"
+               color="#3a2a1a" material="roughness: 0.7"></a-box>
+
+        <a-text value="The Cube"
+                position="${wallX - 0.15} ${doorHeight + 0.3} ${doorZ}"
+                rotation="0 -90 0" align="center" color="#887766" width="1.5"></a-text>
+        <a-text value="Click to enter"
+                position="${wallX - 0.15} 0.5 ${doorZ}"
+                rotation="0 -90 0" align="center" color="#665544" width="1.2"></a-text>
+      `;
+
+      container.innerHTML = html;
+
+      const door = document.getElementById('second-door-panel');
+      door.addEventListener('click', () => {
+        window.location.href = 'cube.html';
+      });
+      door.addEventListener('mouseenter', () => {
+        door.setAttribute('color', '#4a3a2a');
+      });
+      door.addEventListener('mouseleave', () => {
+        door.setAttribute('color', '#3a2a1a');
+      });
+    }
+
+    // ============ CARCERI PORTAL (ISLAMIC DESIGN) ============
+    function buildCarceriPortal(roomLength) {
+      const container = document.getElementById('carceri-portal');
+      const portalWidth = 1.6;
+      const portalHeight = 3.2;
+      const wallX = ROOM_WIDTH / 2;
+      const portalZ = roomLength / 4 - 5; // Further into the library
+
+      let html = '';
+
+      // Outer frame - deep purple stone
+      html += `
+        <a-box position="${wallX - 0.08} ${portalHeight/2} ${portalZ}"
+               width="0.18" height="${portalHeight + 0.4}" depth="${portalWidth + 0.5}"
+               color="#2a1a3a" material="roughness: 0.7"></a-box>
+      `;
+
+      // Inner decorative frame - gold/brass trim
+      html += `
+        <a-box position="${wallX - 0.06} ${portalHeight/2} ${portalZ}"
+               width="0.05" height="${portalHeight + 0.2}" depth="${portalWidth + 0.3}"
+               color="#8a7a4a" material="roughness: 0.4; metalness: 0.6"></a-box>
+      `;
+
+      // Pointed arch top (Islamic horseshoe arch approximation with boxes)
+      const archY = portalHeight + 0.1;
+      html += `
+        <a-box position="${wallX - 0.06} ${archY} ${portalZ}"
+               width="0.16" height="0.4" depth="${portalWidth + 0.1}"
+               color="#3a2a4a" material="roughness: 0.6"></a-box>
+        <a-box position="${wallX - 0.06} ${archY + 0.15} ${portalZ}"
+               rotation="0 0 0" width="0.14" height="0.25" depth="${portalWidth - 0.2}"
+               color="#4a3a5a" material="roughness: 0.6"></a-box>
+      `;
+
+      // Geometric star pattern on lintel (8-pointed star suggestion)
+      html += `
+        <a-box position="${wallX - 0.04} ${archY + 0.05} ${portalZ}"
+               rotation="0 0 45" width="0.2" height="0.2" depth="0.02"
+               color="#9a8a5a" material="roughness: 0.3; metalness: 0.7"></a-box>
+        <a-box position="${wallX - 0.04} ${archY + 0.05} ${portalZ}"
+               rotation="0 0 0" width="0.2" height="0.2" depth="0.025"
+               color="#8a7a4a" material="roughness: 0.3; metalness: 0.7"></a-box>
+      `;
+
+      // Side columns with geometric patterns
+      const colZ1 = portalZ - portalWidth/2 - 0.15;
+      const colZ2 = portalZ + portalWidth/2 + 0.15;
+      for (const colZ of [colZ1, colZ2]) {
+        // Column base
+        html += `<a-box position="${wallX - 0.06} 0.15 ${colZ}" width="0.12" height="0.3" depth="0.2" color="#3a2a4a"></a-box>`;
+        // Column shaft
+        html += `<a-cylinder position="${wallX - 0.06} ${portalHeight/2} ${colZ}" radius="0.06" height="${portalHeight - 0.5}" color="#4a3a5a" material="roughness: 0.5"></a-cylinder>`;
+        // Column capital
+        html += `<a-box position="${wallX - 0.06} ${portalHeight - 0.1} ${colZ}" width="0.16" height="0.2" depth="0.2" color="#5a4a6a"></a-box>`;
+        // Decorative rings on column
+        for (let ringY = 1; ringY < portalHeight - 0.5; ringY += 0.8) {
+          html += `<a-torus position="${wallX - 0.06} ${ringY} ${colZ}" rotation="0 0 90" radius="0.08" radius-tubular="0.01" color="#8a7a4a" material="metalness: 0.6"></a-torus>`;
+        }
+      }
+
+      // The door itself - deep purple with geometric inlay
+      html += `
+        <a-box id="carceri-door" class="portal"
+               position="${wallX - 0.12} ${portalHeight/2} ${portalZ}"
+               width="0.08" height="${portalHeight - 0.2}" depth="${portalWidth}"
+               color="#2a1a3a" material="roughness: 0.6"></a-box>
+      `;
+
+      // Geometric patterns on door (simplified arabesque)
+      const patternY = [1, 1.8, 2.6];
+      for (const py of patternY) {
+        html += `
+          <a-box position="${wallX - 0.08} ${py} ${portalZ}"
+                 rotation="0 0 45" width="0.25" height="0.25" depth="0.01"
+                 color="#5a4a6a" material="roughness: 0.5"></a-box>
+          <a-ring position="${wallX - 0.07} ${py} ${portalZ}"
+                  rotation="0 90 0" radius-inner="0.08" radius-outer="0.12"
+                  color="#7a6a4a" material="metalness: 0.5; side: double"></a-ring>
+        `;
+      }
+
+      // Door knocker (brass ring)
+      html += `
+        <a-torus position="${wallX - 0.07} 1.4 ${portalZ}"
+                 rotation="90 0 0" radius="0.08" radius-tubular="0.015"
+                 color="#aa9a6a" material="metalness: 0.8; roughness: 0.3"></a-torus>
+      `;
+
+      // Atmospheric purple light
+      html += `
+        <a-light type="point" position="${wallX - 0.5} ${portalHeight/2} ${portalZ}"
+                 color="#8866aa" intensity="0.4" decay="2" distance="4"></a-light>
+      `;
+
+      // Labels
+      html += `
+        <a-text value="The Carceri"
+                position="${wallX - 0.2} ${portalHeight + 0.6} ${portalZ}"
+                rotation="0 -90 0" align="center" color="#8877aa" width="2"></a-text>
+        <a-text value="Click to enter"
+                position="${wallX - 0.2} 0.4 ${portalZ}"
+                rotation="0 -90 0" align="center" color="#665577" width="1.2"></a-text>
+      `;
+
+      container.innerHTML = html;
+
+      // Setup click handler
+      const portal = document.getElementById('carceri-door');
+      portal.addEventListener('click', () => {
+        window.location.href = 'carceri.html';
+      });
+      portal.addEventListener('mouseenter', () => {
+        portal.setAttribute('color', '#3a2a4a');
+        portal.setAttribute('material', 'emissive', '#221133');
+      });
+      portal.addEventListener('mouseleave', () => {
+        portal.setAttribute('color', '#2a1a3a');
+        portal.setAttribute('material', 'emissive', '#000000');
+      });
+    }
+
+    // ============ UWS PORTAL (MODERN GALLERY) ============
+    function buildUWSPortal(roomLength) {
+      const container = document.getElementById('uws-portal');
+      const portalWidth = 1.4;
+      const portalHeight = 2.8;
+      const wallX = ROOM_WIDTH / 2;
+      const portalZ = roomLength / 4 + 8; // Near entrance, on east wall
+
+      let html = `
+        <!-- Clean modern frame -->
+        <a-box position="${wallX - 0.06} ${portalHeight/2} ${portalZ}"
+               width="0.14" height="${portalHeight + 0.2}" depth="${portalWidth + 0.3}"
+               color="#e8e6e4" material="roughness: 0.3; metalness: 0.1"></a-box>
+
+        <!-- Inner dark frame -->
+        <a-box position="${wallX - 0.08} ${portalHeight/2} ${portalZ}"
+               width="0.08" height="${portalHeight} " depth="${portalWidth + 0.1}"
+               color="#333333" material="roughness: 0.4; metalness: 0.2"></a-box>
+
+        <!-- Door panel -->
+        <a-box id="uws-door" class="portal"
+               position="${wallX - 0.1} ${portalHeight/2} ${portalZ}"
+               width="0.06" height="${portalHeight - 0.15}" depth="${portalWidth}"
+               color="#fafafa" material="roughness: 0.2; metalness: 0.05"></a-box>
+
+        <!-- Subtle light -->
+        <a-light type="point" position="${wallX - 0.5} ${portalHeight/2} ${portalZ}"
+                 color="#ffffff" intensity="0.15" decay="2" distance="3"></a-light>
+
+        <!-- Label -->
+        <a-text value="Upper West Side"
+                position="${wallX - 0.15} ${portalHeight + 0.35} ${portalZ}"
+                rotation="0 -90 0" align="center" color="#555" width="2"></a-text>
+        <a-text value="Contemporary Gallery"
+                position="${wallX - 0.15} 0.5 ${portalZ}"
+                rotation="0 -90 0" align="center" color="#888" width="1.5"></a-text>
+      `;
+
+      container.innerHTML = html;
+
+      const portal = document.getElementById('uws-door');
+      portal.addEventListener('click', () => {
+        window.location.href = 'uws.html';
+      });
+      portal.addEventListener('mouseenter', () => {
+        portal.setAttribute('color', '#f0f0f0');
+      });
+      portal.addEventListener('mouseleave', () => {
+        portal.setAttribute('color', '#fafafa');
+      });
+    }
+
+    // ============ INTERACTIONS ============
+    function onBookHover(el, book) {
+      hoveredBook = { el, book };
+
+      const info = document.getElementById('book-info');
+      info.querySelector('.title').textContent = book.title;
+      info.querySelector('.author').textContent = 'by ' + (book.author || 'Unknown');
+      info.classList.add('visible');
+
+      el.querySelector('a-box').setAttribute('emissive', '#333');
+    }
+
+    function onBookLeave() {
+      if (hoveredBook) {
+        hoveredBook.el.querySelector('a-box').removeAttribute('emissive');
+      }
+      hoveredBook = null;
+      document.getElementById('book-info').classList.remove('visible');
+    }
+
+    document.querySelector('a-scene').addEventListener('loaded', init);
   </script>
 </body>
 </html>

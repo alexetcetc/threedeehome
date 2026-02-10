@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>The Cube</title>
+  <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-extras@4.1.2/dist/aframe-extras.min.js"></script>
+  <script src="https://unpkg.com/aframe-physics-system@3.1.2/dist/aframe-physics-system.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <a-scene physics="debug: false" background="color: #0a0a12">
+    <!-- Assets -->
+    <a-assets>
+      <audio id="wind" src="/audio/wind1.mp3" preload="auto"></audio>
+    </a-assets>
+
+    <!-- Player with physics -->
+    <a-entity id="rig" position="0 1 9" movement-controls="speed: 0.15" kinematic-body jump-ability>
+      <a-entity id="camera" camera look-controls="pointerLockEnabled: true" position="0 1.6 0"></a-entity>
+    </a-entity>
+
+    <!-- Room container -->
+    <a-entity id="cube-room"></a-entity>
+
+    <!-- Ambient light -->
+    <a-light type="ambient" color="#fff" intensity="0.5"></a-light>
+
+    <!-- Instructions -->
+    <a-text value="WASD to move | SPACE to jump | Walk up the stairs on the right"
+            position="0 2 7" rotation="0 180 0" align="center" color="#aaa" width="6"></a-text>
+  </a-scene>
+
+  <script>
+    const CUBE_SIZE = 20;
+    const GANTRY_HEIGHT = 13.3;
+    const half = CUBE_SIZE / 2;
+
+    function buildRoom() {
+      const room = document.getElementById('cube-room');
+      let html = '';
+
+      // ===== FLOOR =====
+      html += `<a-box static-body color="#3a3a44" position="0 -0.25 0" width="${CUBE_SIZE}" height="0.5" depth="${CUBE_SIZE}"></a-box>`;
+
+      // ===== CEILING =====
+      html += `<a-box static-body color="#2a2a34" position="0 ${CUBE_SIZE} 0" width="${CUBE_SIZE}" height="0.5" depth="${CUBE_SIZE}"></a-box>`;
+
+      // ===== WALLS =====
+      // Back wall (+Z) - entrance
+      html += `<a-box static-body color="#3a3a44" position="0 ${half} ${half}" width="${CUBE_SIZE}" height="${CUBE_SIZE}" depth="0.5"></a-box>`;
+      // Front wall (-Z)
+      html += `<a-box static-body color="#3a3a44" position="0 ${half} ${-half}" width="${CUBE_SIZE}" height="${CUBE_SIZE}" depth="0.5"></a-box>`;
+      // Left wall (-X)
+      html += `<a-box static-body color="#3a3a44" position="${-half} ${half} 0" width="0.5" height="${CUBE_SIZE}" depth="${CUBE_SIZE}"></a-box>`;
+      // Right wall (+X)
+      html += `<a-box static-body color="#3a3a44" position="${half} ${half} 0" width="0.5" height="${CUBE_SIZE}" depth="${CUBE_SIZE}"></a-box>`;
+
+      // ===== ENTRANCE DOOR =====
+      html += `<a-box id="exit-door" class="interactive" color="#1a1a2a" position="0 1.4 ${half - 0.3}" width="1.5" height="2.8" depth="0.1"></a-box>`;
+      html += `<a-text value="Library" position="0 3 ${half - 0.3}" rotation="0 180 0" align="center" color="#667" width="2"></a-text>`;
+
+      // ===== STAIRS (right side) =====
+      const stairWidth = 4;
+      const stairHeight = 0.4;
+      const stairDepth = 0.5;  // Steeper stairs
+      const stairX = 7;
+      const stairStartZ = half - 4;  // 4 meters from back wall
+      const numSteps = Math.ceil(GANTRY_HEIGHT / stairHeight);
+
+      for (let i = 0; i < numSteps; i++) {
+        const y = i * stairHeight + stairHeight / 2;
+        const z = stairStartZ - i * stairDepth;
+        const color = i % 2 === 0 ? '#445' : '#556';
+
+        html += `<a-box static-body color="${color}" position="${stairX} ${y} ${z}" width="${stairWidth}" height="${stairHeight}" depth="${stairDepth}"></a-box>`;
+      }
+
+      // Railing only on the RIGHT side of stairs (against the wall)
+      const railZ = stairStartZ - (numSteps * stairDepth) / 2;
+      html += `<a-box static-body color="#334" position="${stairX + stairWidth/2 + 0.1} ${GANTRY_HEIGHT/2} ${railZ}" width="0.1" height="${GANTRY_HEIGHT}" depth="${numSteps * stairDepth}"></a-box>`;
+
+      // ===== GANTRY (wrap-around platform matching stair top) =====
+      const gantryWidth = 2.5;
+      const gantryThick = 0.3;
+
+      // Calculate top step position first
+      const topStepZ = stairStartZ - (numSteps - 1) * stairDepth;
+      const topStepY = (numSteps - 1) * stairHeight + stairHeight;  // Top surface of final step
+      const gantryY = topStepY;  // Match the top of stairs
+
+      console.log('Gantry Y:', gantryY, 'Top step Y:', topStepY);
+
+      // Left gantry (-X side)
+      html += `<a-box static-body color="#4a4a55" position="${-half + gantryWidth/2 + 0.25} ${gantryY} 0" width="${gantryWidth}" height="${gantryThick}" depth="${CUBE_SIZE - 1}"></a-box>`;
+
+      // Front gantry (-Z side)
+      html += `<a-box static-body color="#4a4a55" position="0 ${gantryY} ${-half + gantryWidth/2 + 0.25}" width="${CUBE_SIZE - gantryWidth*2}" height="${gantryThick}" depth="${gantryWidth}"></a-box>`;
+
+      // Back gantry (+Z side, partial - leave gap for stairs)
+      html += `<a-box static-body color="#4a4a55" position="${-3} ${gantryY} ${half - gantryWidth/2 - 0.25}" width="${CUBE_SIZE/2 - 2}" height="${gantryThick}" depth="${gantryWidth}"></a-box>`;
+
+      // Landing at top of stairs - connects stairs to gantry
+      const landingZ = topStepZ - stairDepth/2 - gantryWidth/2;
+      html += `<a-box static-body color="#4a4a55" position="${stairX} ${gantryY} ${landingZ}" width="${stairWidth + 1}" height="${gantryThick}" depth="${gantryWidth + 1}"></a-box>`;
+
+
+      // Gantry railings
+      const railHeight = 1;
+      html += `<a-box color="#334" position="${-half + gantryWidth + 0.3} ${gantryY + railHeight/2 + gantryThick/2} 0" width="0.08" height="${railHeight}" depth="${CUBE_SIZE - 4}"></a-box>`;
+      html += `<a-box color="#334" position="0 ${gantryY + railHeight/2 + gantryThick/2} ${-half + gantryWidth + 0.3}" width="${CUBE_SIZE - gantryWidth*2 - 2}" height="${railHeight}" depth="0.08"></a-box>`;
+
+      // ===== LIGHTING =====
+      html += `<a-light type="point" position="0 4 0" intensity="1" color="#fff" distance="20"></a-light>`;
+      html += `<a-light type="point" position="${stairX} 6 0" intensity="0.8" color="#eef" distance="15"></a-light>`;
+      html += `<a-light type="point" position="0 ${GANTRY_HEIGHT + 2} 0" intensity="0.8" color="#ddf" distance="15"></a-light>`;
+      html += `<a-light type="point" position="${-half + 2} ${GANTRY_HEIGHT + 2} 0" intensity="0.6" color="#ddf" distance="12"></a-light>`;
+
+      room.innerHTML = html;
+
+      // Setup exit door click
+      setTimeout(() => {
+        const door = document.getElementById('exit-door');
+        if (door) {
+          door.addEventListener('click', () => window.location.href = 'index.html');
+        }
+      }, 500);
+
+      console.log('=== CUBE ROOM LOADED (physics version) ===');
+      console.log('Stairs:', numSteps, 'steps');
+    }
+
+    // Wind audio based on height
+    setInterval(() => {
+      const rig = document.getElementById('rig');
+      if (!rig) return;
+
+      const y = rig.object3D.position.y;
+      const audio = document.getElementById('wind');
+
+      if (y > 4) {
+        const vol = Math.min(1, (y - 4) / 10);
+        audio.volume = vol;
+        if (audio.paused) audio.play().catch(() => {});
+      } else {
+        audio.volume = 0;
+      }
+    }, 100);
+
+    document.querySelector('a-scene').addEventListener('loaded', buildRoom);
+  </script>
+</body>
+</html>
