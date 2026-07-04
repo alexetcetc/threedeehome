@@ -248,6 +248,12 @@
 
         // Spot lights along track
         for (let z = -12; z <= 12; z += 8) {
+          const targetId = `spot-target-${x}-${z}`.replace(/-/g, 'n');
+          const spotTarget = document.createElement('a-entity');
+          spotTarget.setAttribute('id', targetId);
+          spotTarget.setAttribute('position', `${x} 0 ${z}`);
+          gallery.appendChild(spotTarget);
+
           const spot = document.createElement('a-light');
           spot.setAttribute('type', 'spot');
           spot.setAttribute('color', '#fff8f0');
@@ -255,7 +261,7 @@
           spot.setAttribute('position', `${x} ${h - 0.6} ${z}`);
           spot.setAttribute('angle', '35');
           spot.setAttribute('penumbra', '0.3');
-          spot.setAttribute('target', `${x} 0 ${z}`);
+          spot.setAttribute('target', `#${targetId}`);
           spot.setAttribute('decay', '1.5');
           spot.setAttribute('distance', '15');
           gallery.appendChild(spot);
